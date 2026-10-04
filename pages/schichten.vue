@@ -96,7 +96,7 @@ async function retry(): Promise<void> {
 
 <template>
   <section class="mx-auto max-w-xl">
-    <h1 class="font-display text-4xl font-medium uppercase tracking-wide">Schichten</h1>
+    <h1 class="display-title text-4xl">Schichten</h1>
     <p class="mt-2 text-base leading-7 text-muted">
       Nur der Name zählt. Die Farbe bleibt am Namen, damit Tage im Kalender unterscheidbar sind.
     </p>

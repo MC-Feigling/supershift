@@ -70,7 +70,7 @@ async function retry(): Promise<void> {
 
 <template>
   <section class="mx-auto max-w-xl">
-    <h1 class="font-display text-4xl font-medium uppercase tracking-wide">Teilen</h1>
+    <h1 class="display-title text-4xl">Teilen</h1>
     <p class="mt-2 text-base leading-7 text-muted">
       Eine Person kann deinen Plan lesen. Sie ändert nichts. Es gibt keine Gruppe und keine weitere Freigabe.
     </p>
@@ -82,7 +82,7 @@ async function retry(): Promise<void> {
 
     <div v-else class="mt-6 space-y-4">
       <article v-if="hasOpenShare" class="panel">
-        <h2 class="font-display text-2xl font-medium uppercase tracking-wide">{{ shareTitle }}</h2>
+        <h2 class="display-title text-2xl">{{ shareTitle }}</h2>
         <p class="mt-2 text-sm leading-6 text-muted">{{ shareBody }}</p>
         <div v-if="confirmingRevoke" class="mt-4">
           <p class="text-sm font-semibold">Zugriff wirklich entziehen?</p>
@@ -97,7 +97,7 @@ async function retry(): Promise<void> {
       </article>
 
       <form v-else class="panel" @submit.prevent="invite">
-        <h2 class="font-display text-2xl font-medium uppercase tracking-wide">Mit einer Person teilen</h2>
+        <h2 class="display-title text-2xl">Mit einer Person teilen</h2>
         <p class="mt-2 text-sm leading-6 text-muted">
           Hat die Person schon ein Konto, sieht sie den Plan beim nächsten Öffnen. Sonst bleibt die Einladung offen, bis sie sich registriert.
         </p>
@@ -119,7 +119,7 @@ async function retry(): Promise<void> {
       </form>
 
       <article v-if="hasIncoming" class="panel">
-        <h2 class="font-display text-2xl font-medium uppercase tracking-wide">Mit dir geteilt</h2>
+        <h2 class="display-title text-2xl">Mit dir geteilt</h2>
         <ul class="mt-3 space-y-2">
           <li v-for="share in plan.incomingShares" :key="share.id" class="text-sm text-muted">
             {{ share.ownerEmail }}

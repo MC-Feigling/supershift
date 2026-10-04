@@ -20,25 +20,25 @@ const weekdayLabels = WEEKDAY_LABELS
 <template>
   <section class="panel p-3 sm:p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3 px-1">
-      <h1 class="font-display text-3xl font-medium uppercase tracking-wide sm:text-4xl">{{ monthLabel }}</h1>
+      <h1 class="display-title text-3xl capitalize sm:text-4xl">{{ monthLabel }}</h1>
       <div class="flex items-center gap-2">
         <AppButton variant="secondary" @click="emit('previous')">Zurück</AppButton>
         <AppButton variant="secondary" @click="emit('today')">Heute</AppButton>
         <AppButton variant="secondary" @click="emit('next')">Weiter</AppButton>
       </div>
     </div>
-    <div class="overflow-hidden rounded-sm border border-line">
-    <div class="grid grid-cols-7 gap-px bg-line text-center">
-      <span v-for="label in weekdayLabels" :key="label" class="label-meta bg-sand py-2">{{ label }}</span>
+    <div class="overflow-hidden rounded-sm border border-ink/20">
+    <div class="grid grid-cols-7 border-b border-ink/20 text-center">
+      <span v-for="label in weekdayLabels" :key="label" class="label-meta border-r border-ink/20 py-2 last:border-r-0">{{ label }}</span>
     </div>
-    <div class="grid grid-cols-7 gap-px bg-line">
+    <div class="grid grid-cols-7">
       <button
         v-for="cell in cells"
         :key="cell.iso"
         type="button"
         :aria-label="cell.label"
         :aria-pressed="cell.isSelected"
-        class="flex min-h-24 flex-col bg-card px-1.5 py-1.5 text-left transition sm:min-h-32 sm:px-2"
+        class="flex min-h-24 flex-col border-b border-r border-ink/20 px-1.5 py-1.5 text-left transition sm:min-h-32 sm:px-2 [&:nth-child(7n)]:border-r-0"
         :class="[
           cell.isWeekend ? 'bg-sand' : 'bg-card',
           cell.inMonth ? '' : 'opacity-40',

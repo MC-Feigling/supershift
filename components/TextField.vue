@@ -42,7 +42,7 @@ function onInput(event: Event): void {
       :disabled="disabled"
       :aria-invalid="invalid"
       :aria-describedby="errorId"
-      class="w-full rounded-sm border border-line bg-sand px-3.5 py-3 text-base text-ink outline-none ring-spruce placeholder:text-muted focus:border-spruce focus:ring-2 disabled:opacity-60"
+      class="w-full rounded-sm border border-line bg-paper px-3.5 py-3 text-base text-ink outline-none ring-spruce placeholder:text-muted focus:border-spruce focus:ring-2 disabled:opacity-60"
       @input="onInput"
     >
     <span v-if="error" :id="errorId" class="mt-1.5 block text-sm text-clay">{{ error }}</span>

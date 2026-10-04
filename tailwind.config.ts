@@ -11,11 +11,11 @@ export default {
     extend: {
       colors: {
         paper: '#141618',
-        sand: '#1c1f24',
-        card: '#23272e',
-        ink: '#ebe6dc',
-        muted: '#9a9286',
-        line: '#3c414b',
+        sand: '#1f232a',
+        card: '#333943',
+        ink: '#f0ebe3',
+        muted: '#b0a89c',
+        line: '#6a7382',
         spruce: {
           DEFAULT: '#d4a24c',
           deep: '#a67c2d',

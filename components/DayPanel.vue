@@ -79,7 +79,7 @@ function confirmRemove(): void {
 <template>
   <aside class="panel">
     <p class="label-meta">Ausgewählter Tag</p>
-    <h2 class="mt-1 font-display text-3xl font-medium uppercase leading-tight tracking-wide">{{ dayLabel }}</h2>
+    <h2 class="display-title mt-1 text-3xl leading-tight">{{ dayLabel }}</h2>
 
     <p v-if="readOnly" class="mt-4 rounded-sm bg-spruce-soft px-3 py-2 text-sm text-spruce">
       Nur lesen. Diesen Plan hat jemand mit dir geteilt.
@@ -121,7 +121,7 @@ function confirmRemove(): void {
         <select
           id="shift-choice"
           :value="shiftTypeId"
-          class="w-full rounded-sm border border-line bg-sand px-3.5 py-3 text-base"
+          class="w-full rounded-sm border border-line bg-paper px-3.5 py-3 text-base"
           @change="onShiftChange"
         >
           <option value="">Schicht wählen</option>

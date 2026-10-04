@@ -44,8 +44,8 @@ function submit(): void {
 </script>
 
 <template>
-  <div>
-    <h1 class="font-display text-4xl font-medium uppercase tracking-wide">{{ title }}</h1>
+  <div class="panel">
+    <h1 class="display-title text-4xl">{{ title }}</h1>
     <p class="mt-2 text-base leading-7 text-muted">{{ lead }}</p>
     <form class="mt-8 space-y-4" @submit.prevent="submit">
       <TextField

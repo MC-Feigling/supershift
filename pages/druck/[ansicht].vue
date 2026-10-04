@@ -97,7 +97,7 @@ async function retry(): Promise<void> {
     <div v-else>
       <header class="border-b-2 border-coal pb-4">
         <p class="font-mono text-[11px] font-medium uppercase tracking-stencil text-coal/60">Schichtwerk</p>
-        <h1 class="mt-1 font-display text-4xl font-medium uppercase tracking-wide">{{ heading }}</h1>
+        <h1 class="display-title mt-1 text-4xl">{{ heading }}</h1>
         <p class="mt-2 text-lg">{{ periodLabel }}</p>
         <p class="font-mono text-sm text-coal/70">{{ personLabel }}</p>
       </header>
