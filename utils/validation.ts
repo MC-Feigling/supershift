@@ -1,10 +1,11 @@
 import type { Placement, PlacementDraft } from '~/types/plan'
-import { EMAIL_MAX_LENGTH, MIN_PASSWORD_LENGTH, SERIES_MAX_DAYS, SHIFT_NAME_MAX_LENGTH } from './constants'
+import { EMAIL_MAX_LENGTH, INVITE_TOKEN_LENGTH, MIN_PASSWORD_LENGTH, NOTE_MAX_LENGTH, SERIES_MAX_DAYS, SHIFT_NAME_MAX_LENGTH } from './constants'
 import { dayDiff, isIsoDate, parseIsoDate } from './dates'
 import { occursOn } from './occurrences'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const INVITE_TOKEN_PATTERN = new RegExp(`^[0-9a-f]{${INVITE_TOKEN_LENGTH}}$`)
 
 export interface CredentialErrors {
   email: string | null
@@ -21,6 +22,15 @@ export function normalizeShiftName(value: string): string {
 
 export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value)
+}
+
+export function isInviteToken(value: string): boolean {
+  return INVITE_TOKEN_PATTERN.test(value)
+}
+
+export function normalizeNote(value: string): string | null {
+  const trimmed = value.trim()
+  return trimmed.length === 0 ? null : trimmed
 }
 
 export function validateCredentials(email: string, password: string): CredentialErrors {
@@ -56,11 +66,19 @@ export function validateShiftName(name: string): string | null {
   return null
 }
 
+export function validateNote(note: string | null): string | null {
+  if (note === null) return null
+  if (note.length > NOTE_MAX_LENGTH) return `Notiz höchstens ${NOTE_MAX_LENGTH} Zeichen.`
+  return null
+}
+
 export function validatePlacement(draft: PlacementDraft, knownShiftIds: readonly string[]): string | null {
   if (!isUuid(draft.shiftTypeId) || !knownShiftIds.includes(draft.shiftTypeId)) {
     return 'Wähle eine Schicht.'
   }
   if (!isIsoDate(draft.startsOn)) return 'Das Datum ist ungültig.'
+  const noteError = validateNote(draft.note)
+  if (noteError) return noteError
   if (!draft.repeatsWeekly) return null
   if (!draft.endsOn || !isIsoDate(draft.endsOn)) return 'Wähle das Enddatum der Serie.'
   if (draft.endsOn < draft.startsOn) return 'Das Enddatum liegt vor dem Start.'

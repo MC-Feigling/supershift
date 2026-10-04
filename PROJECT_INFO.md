@@ -4,11 +4,13 @@ Persönlicher Schichtplan. Eine angemeldete Person führt ihn und kann ihn mit g
 
 ## Umfang
 
+- Registrierung auf der Startseite mit E-Mail und Passwort
 - Anmeldung mit E-Mail und Passwort
+- Bestätigung der E-Mail über /bestaetigen
 - Schichten nur als Name
-- Monatskalender, Eintrag auf einen Tag, optionale wöchentliche Serie bis zu einem Datum
-- Druck von Woche und Monat
-- Freigabe per E-Mail, nur lesen, Widerruf
+- Monatskalender, Eintrag auf einen Tag, optionale Notiz, optionale wöchentliche Serie bis zu einem Datum
+- Druck von Woche und Monat, inklusive Notiz
+- Freigabe an eine Person, nur lesen, per Link oder E-Mail, Widerruf
 - Oberfläche auf Deutsch
 
 ## Nicht im Umfang

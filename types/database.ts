@@ -27,6 +27,7 @@ export interface Database {
           starts_on: string
           ends_on: string | null
           repeats_weekly: boolean
+          note: string | null
           created_at: string
         }
         Insert: {
@@ -36,6 +37,7 @@ export interface Database {
           starts_on: string
           ends_on?: string | null
           repeats_weekly?: boolean
+          note?: string | null
           created_at?: string
         }
         Update: {
@@ -52,6 +54,7 @@ export interface Database {
           owner_email: string
           grantee_email: string
           grantee_id: string | null
+          invite_token: string
           status: string
           created_at: string
           revoked_at: string | null
@@ -60,7 +63,7 @@ export interface Database {
           id?: string
           owner_id: string
           owner_email?: string
-          grantee_email: string
+          grantee_email?: string
           grantee_id?: string | null
           status?: string
           created_at?: string
@@ -74,6 +77,15 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      preview_invite: {
+        Args: { p_token: string }
+        Returns: string
+      }
+      claim_plan_share: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+    }
   }
 }

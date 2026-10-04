@@ -27,6 +27,7 @@ export interface Placement {
   startsOn: string
   endsOn: string | null
   repeatsWeekly: boolean
+  note: string | null
   createdAt: string
 }
 
@@ -36,6 +37,7 @@ export interface PlanShare {
   ownerEmail: string
   granteeEmail: string
   granteeId: string | null
+  inviteToken: string | null
   status: ShareStatus
   createdAt: string
   revokedAt: string | null
@@ -46,6 +48,7 @@ export interface PlacementDraft {
   startsOn: string
   repeatsWeekly: boolean
   endsOn: string | null
+  note: string | null
 }
 
 export interface ShiftColor {
@@ -56,6 +59,7 @@ export interface ShiftColor {
 export interface DayChip {
   placementId: string
   name: string
+  note: string | null
   background: string
   color: string
 }
@@ -75,6 +79,7 @@ export interface CalendarCell {
 export interface DayEntry {
   placementId: string
   name: string
+  note: string | null
   background: string
   color: string
   detail: string

@@ -1,14 +1,14 @@
 import type { ShiftColor } from '~/types/plan'
 
 export const SHIFT_COLOR_PALETTE: readonly ShiftColor[] = [
-  { background: '#dce8df', color: '#143528' },
-  { background: '#f3dfd4', color: '#6b2d22' },
-  { background: '#d9e4f2', color: '#1d3557' },
-  { background: '#f4e7c5', color: '#5c4814' },
-  { background: '#e7dff3', color: '#3d2a5c' },
-  { background: '#d8efe8', color: '#0f4f45' },
-  { background: '#f8dce3', color: '#6e2438' },
-  { background: '#e6e2d8', color: '#3f3a32' },
+  { background: '#2c3136', color: '#f3f0ea' },
+  { background: '#b8432f', color: '#f7f1ea' },
+  { background: '#8a5a12', color: '#f6efe2' },
+  { background: '#4e555c', color: '#f3f0ea' },
+  { background: '#1c1b19', color: '#f3f0ea' },
+  { background: '#6e4a3a', color: '#f6efe6' },
+  { background: '#3c4744', color: '#f3f0ea' },
+  { background: '#5c5346', color: '#f4efe6' },
 ]
 
 export function shiftColor(name: string): ShiftColor {

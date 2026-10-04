@@ -1,20 +1,21 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{ onDark?: boolean }>(), { onDark: false })
 
-const tileFill = computed(() => props.onDark ? '#f3eee4' : '#1d4a38')
-const barFill = computed(() => props.onDark ? '#1d4a38' : '#f3eee4')
-const softFill = computed(() => props.onDark ? '#8d3b2c' : '#e4d9c8')
-const wordClass = computed(() => props.onDark ? 'text-white' : 'text-ink')
+const tileFill = computed(() => props.onDark ? '#e4e1da' : '#141311')
+const barFill = computed(() => props.onDark ? '#141311' : '#e4e1da')
+const accentFill = '#b8432f'
+const wordClass = computed(() => props.onDark ? 'text-paper' : 'text-ink')
 </script>
 
 <template>
   <span class="inline-flex items-center gap-2">
     <svg viewBox="0 0 32 32" class="h-8 w-8" aria-hidden="true">
-      <rect width="32" height="32" rx="8" :fill="tileFill" />
-      <rect x="7" y="8" width="18" height="3" rx="1.5" :fill="barFill" />
-      <rect x="7" y="14.5" width="12" height="3" rx="1.5" :fill="barFill" />
-      <rect x="7" y="21" width="18" height="3" rx="1.5" :fill="softFill" />
+      <rect width="32" height="32" :fill="tileFill" />
+      <rect x="6" y="7" width="20" height="2" :fill="barFill" />
+      <rect x="6" y="13" width="14" height="2" :fill="barFill" />
+      <rect x="6" y="19" width="20" height="2" :fill="accentFill" />
+      <rect x="6" y="25" width="8" height="2" :fill="barFill" />
     </svg>
-    <span class="font-display text-xl font-medium tracking-tight" :class="wordClass">Schichtwerk</span>
+    <span class="text-sm font-medium uppercase tracking-[0.18em]" :class="wordClass">Schichtwerk</span>
   </span>
 </template>

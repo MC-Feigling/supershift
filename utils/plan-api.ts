@@ -46,7 +46,7 @@ export async function deleteShiftType(client: Client, shiftTypeId: string): Prom
 export async function fetchPlacements(client: Client, ownerId: string): Promise<Placement[]> {
   const { data, error } = await client
     .from(TABLES.placements)
-    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, created_at')
+    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, note, created_at')
     .eq('owner_id', ownerId)
 
   if (error) throw error
@@ -57,7 +57,7 @@ export async function fetchPlacementsForOwners(client: Client, ownerIds: readonl
   if (ownerIds.length === 0) return []
   const { data, error } = await client
     .from(TABLES.placements)
-    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, created_at')
+    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, note, created_at')
     .in('owner_id', [...ownerIds])
 
   if (error) throw error
@@ -71,6 +71,7 @@ export async function insertPlacement(client: Client, ownerId: string, draft: Pl
     starts_on: draft.startsOn,
     ends_on: draft.repeatsWeekly ? draft.endsOn : null,
     repeats_weekly: draft.repeatsWeekly,
+    note: draft.note,
   })
   if (error) throw error
 }
@@ -83,7 +84,7 @@ export async function deletePlacement(client: Client, placementId: string): Prom
 export async function fetchOutgoingShare(client: Client, ownerId: string): Promise<PlanShare | null> {
   const { data, error } = await client
     .from(TABLES.planShares)
-    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, created_at, revoked_at')
+    .select('id, owner_id, owner_email, grantee_email, grantee_id, invite_token, status, created_at, revoked_at')
     .eq('owner_id', ownerId)
     .in('status', [SHARE_STATUS.pending, SHARE_STATUS.active])
     .maybeSingle()
@@ -142,11 +143,24 @@ function mapPlacement(row: Database['public']['Tables']['placements']['Row']): P
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     repeatsWeekly: row.repeats_weekly,
+    note: row.note,
     createdAt: row.created_at,
   }
 }
 
-function mapShare(row: Database['public']['Tables']['plan_shares']['Row']): PlanShare | null {
+interface ShareRow {
+  id: string
+  owner_id: string
+  owner_email: string
+  grantee_email: string
+  grantee_id: string | null
+  invite_token?: string
+  status: string
+  created_at: string
+  revoked_at: string | null
+}
+
+function mapShare(row: ShareRow): PlanShare | null {
   if (!isShareStatus(row.status)) return null
   return {
     id: row.id,
@@ -154,6 +168,7 @@ function mapShare(row: Database['public']['Tables']['plan_shares']['Row']): Plan
     ownerEmail: row.owner_email,
     granteeEmail: row.grantee_email,
     granteeId: row.grantee_id,
+    inviteToken: row.invite_token ?? null,
     status: row.status,
     createdAt: row.created_at,
     revokedAt: row.revoked_at,

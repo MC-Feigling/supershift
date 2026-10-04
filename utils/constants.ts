@@ -1,5 +1,7 @@
 export const SHIFT_NAME_MIN_LENGTH = 1
 export const SHIFT_NAME_MAX_LENGTH = 40
+export const NOTE_MAX_LENGTH = 80
+export const INVITE_TOKEN_LENGTH = 64
 export const MIN_PASSWORD_LENGTH = 8
 export const EMAIL_MAX_LENGTH = 254
 export const MIN_SUPABASE_KEY_LENGTH = 20
@@ -15,12 +17,16 @@ export const ROUTES = {
   home: '/',
   signIn: '/anmelden',
   signUp: '/registrieren',
+  confirm: '/bestaetigen',
+  invite: '/einladung',
   setup: '/einrichten',
   shifts: '/schichten',
   share: '/teilen',
   printWeek: '/druck/woche',
   printMonth: '/druck/monat',
 } as const
+
+export const INVITE_TOKEN_STORAGE = 'schichtwerk-invite-token'
 
 export const PLAN_QUERY = {
   date: 'datum',
@@ -57,19 +63,33 @@ export const DB_ERROR = {
   onlyRevoke: 'only_revoke',
   shiftTypeMismatch: 'shift_type_mismatch',
   seriesEnd: 'series_end',
+  inviteInvalid: 'invite_invalid',
+  inviteRevoked: 'invite_revoked',
+  inviteTaken: 'invite_taken',
+  inviteEmail: 'invite_email_mismatch',
+  inviteUnconfirmed: 'invite_unconfirmed',
+  notAuthenticated: 'not_authenticated',
 } as const
 
 export const POSTGRES_ERROR = {
   uniqueViolation: '23505',
   undefinedTable: '42P01',
+  undefinedColumn: '42703',
   insufficientPrivilege: '42501',
 } as const
 
 export const POSTGREST_ERROR = {
   schemaCache: 'PGRST205',
+  functionNotFound: 'PGRST202',
   jwt: 'PGRST301',
 } as const
 
 export const PLACEHOLDER_MARKERS = ['YOUR_PROJECT', 'your-publishable-key', 'replace-with'] as const
 
-export const PUBLIC_PATHS = [ROUTES.signIn, ROUTES.signUp, ROUTES.setup] as const
+export const PUBLIC_PATHS = [ROUTES.home, ROUTES.signIn, ROUTES.confirm, ROUTES.setup] as const
+
+export const INVITE_PREVIEW = {
+  open: 'open',
+  yours: 'yours',
+  closed: 'closed',
+} as const

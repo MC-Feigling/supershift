@@ -9,18 +9,18 @@ const props = withDefaults(defineProps<{
 })
 
 const toneClass = computed(() => {
-  if (props.tone === 'error') return 'border-clay/30 bg-[#f8ebe6] text-clay'
-  if (props.tone === 'empty') return 'border-line bg-sand/70 text-ink'
-  return 'border-spruce/20 bg-spruce-soft text-spruce-deep'
+  if (props.tone === 'error') return 'border-accent bg-card text-ink'
+  if (props.tone === 'empty') return 'border-line bg-paper text-ink'
+  return 'border-line bg-card text-ink'
 })
 
 const liveRole = computed(() => props.tone === 'error' ? 'alert' : 'status')
 </script>
 
 <template>
-  <div :class="['rounded-3xl border px-5 py-4', toneClass]" :role="liveRole">
-    <p class="font-display text-xl font-medium">{{ title }}</p>
-    <p v-if="body" class="mt-1 text-sm leading-6 text-current/80">{{ body }}</p>
+  <div :class="['border border-l-2 px-4 py-3', toneClass]" :role="liveRole">
+    <p class="text-base font-medium tracking-tight">{{ title }}</p>
+    <p v-if="body" class="mt-1 text-sm leading-6 text-muted">{{ body }}</p>
     <div v-if="$slots.default" class="mt-4">
       <slot />
     </div>

@@ -51,6 +51,7 @@ const monthCells = computed(() => buildMonthDays(monthDate.value, todayIso()).ma
     name: entry.name,
     background: entry.background,
     color: entry.color,
+    note: entry.note,
   }))
   return { ...day, entries, isEmpty: entries.length === 0 }
 }))
@@ -81,7 +82,7 @@ async function retry(): Promise<void> {
 <template>
   <article class="mx-auto max-w-page px-4 py-8 sm:px-8">
     <div class="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-      <NuxtLink :to="homePath" class="text-sm font-semibold text-spruce underline underline-offset-2">
+      <NuxtLink :to="homePath" class="text-sm font-medium text-ink underline underline-offset-2">
         Zurück zum Kalender
       </NuxtLink>
       <AppButton @click="printDocument">Drucken</AppButton>
@@ -96,24 +97,25 @@ async function retry(): Promise<void> {
 
     <div v-else>
       <header class="border-b border-line pb-4">
-        <p class="text-xs font-semibold uppercase tracking-wide text-muted">Schichtwerk</p>
-        <h1 class="mt-1 font-display text-4xl font-medium">{{ heading }}</h1>
+        <p class="text-[11px] font-medium uppercase tracking-[0.16em] text-muted">Schichtwerk</p>
+        <h1 class="mt-1 text-4xl font-medium tracking-tight">{{ heading }}</h1>
         <p class="mt-2 text-lg">{{ periodLabel }}</p>
         <p class="text-sm text-muted">{{ personLabel }}</p>
       </header>
 
       <div v-if="isWeek" class="mt-6 grid gap-3 sm:grid-cols-7">
-        <section v-for="column in weekColumns" :key="column.iso" class="print-day rounded-2xl border border-line p-3">
-          <h2 class="text-sm font-semibold">{{ column.label }}</h2>
+        <section v-for="column in weekColumns" :key="column.iso" class="print-day border border-line p-3">
+          <h2 class="text-sm font-medium">{{ column.label }}</h2>
           <p v-if="column.isEmpty" class="mt-3 text-sm text-muted">Keine Schicht</p>
           <ul v-else class="mt-3 space-y-2">
             <li
               v-for="entry in column.entries"
               :key="entry.placementId"
-              class="rounded-xl px-2 py-1 text-sm font-semibold"
+              class="px-2 py-1 text-sm font-medium"
               :style="{ backgroundColor: entry.background, color: entry.color }"
             >
-              {{ entry.name }}
+              <span>{{ entry.name }}</span>
+              <span v-if="entry.note" class="mt-1 block text-xs font-normal">Notiz {{ entry.note }}</span>
             </li>
           </ul>
         </section>
@@ -127,17 +129,18 @@ async function retry(): Promise<void> {
           <section
             v-for="cell in monthCells"
             :key="cell.iso"
-            class="print-day min-h-24 rounded-xl border border-line p-1.5"
-            :class="cell.inMonth ? 'bg-white' : 'bg-sand/60'"
+            class="print-day min-h-24 border border-line p-1.5"
+            :class="cell.inMonth ? 'bg-card' : 'bg-concrete'"
           >
-            <p class="text-xs font-semibold">{{ cell.dayNumber }}</p>
+            <p class="text-xs font-medium tabular-nums">{{ cell.dayNumber }}</p>
             <p
               v-for="entry in cell.entries"
               :key="entry.placementId"
-              class="mt-1 truncate rounded-full px-1 text-[10px] font-semibold"
+              class="mt-1 px-1 text-[10px] font-medium"
               :style="{ backgroundColor: entry.background, color: entry.color }"
             >
-              {{ entry.name }}
+              <span class="block truncate">{{ entry.name }}</span>
+              <span v-if="entry.note" class="block truncate font-normal">Notiz {{ entry.note }}</span>
             </p>
           </section>
         </div>

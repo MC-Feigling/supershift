@@ -12,10 +12,12 @@ const props = defineProps<{
   alternatePrompt: string
   alternateLabel: string
   passwordAutocomplete: string
+  alternateAsButton?: boolean
 }>()
 
 const emit = defineEmits<{
   submit: [payload: { email: string, password: string }]
+  alternate: []
 }>()
 
 const email = ref('')
@@ -23,6 +25,7 @@ const password = ref('')
 const emailError = ref('')
 const passwordError = ref('')
 const pendingLabel = computed(() => props.pending ? 'Bitte warten…' : props.submitLabel)
+const useAlternateButton = computed(() => props.alternateAsButton === true)
 
 function onEmail(value: string): void {
   email.value = value
@@ -45,8 +48,9 @@ function submit(): void {
 
 <template>
   <div>
-    <h1 class="font-display text-4xl font-medium tracking-tight">{{ title }}</h1>
-    <p class="mt-2 text-base leading-7 text-muted">{{ lead }}</p>
+    <p class="text-[11px] font-medium uppercase tracking-[0.16em] text-muted">Zugang</p>
+    <h1 class="mt-2 text-4xl font-medium tracking-tight">{{ title }}</h1>
+    <p class="mt-3 text-sm leading-6 text-muted">{{ lead }}</p>
     <form class="mt-8 space-y-4" @submit.prevent="submit">
       <TextField
         id="email"
@@ -68,13 +72,21 @@ function submit(): void {
         :disabled="pending"
         @update:model-value="onPassword"
       />
-      <p v-if="formError" class="text-sm text-clay" role="alert">{{ formError }}</p>
-      <p v-if="info" class="text-sm text-spruce-deep" role="status">{{ info }}</p>
+      <p v-if="formError" class="text-sm text-accent" role="alert">{{ formError }}</p>
+      <p v-if="info" class="border-l-2 border-accent px-3 py-2 text-sm" role="status">{{ info }}</p>
       <AppButton type="submit" :disabled="pending" block>{{ pendingLabel }}</AppButton>
     </form>
     <p class="mt-6 text-sm text-muted">
       {{ alternatePrompt }}
-      <NuxtLink :to="alternateHref" class="font-semibold text-spruce underline underline-offset-2">
+      <button
+        v-if="useAlternateButton"
+        type="button"
+        class="font-medium text-ink underline underline-offset-2"
+        @click="emit('alternate')"
+      >
+        {{ alternateLabel }}
+      </button>
+      <NuxtLink v-else :to="alternateHref" class="font-medium text-ink underline underline-offset-2">
         {{ alternateLabel }}
       </NuxtLink>
     </p>

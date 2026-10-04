@@ -5,20 +5,28 @@
 @layer base {
   html {
     @apply bg-paper text-ink antialiased;
+    font-variant-numeric: tabular-nums;
   }
 
   body {
-    @apply min-h-screen font-sans;
+    @apply min-h-screen bg-paper font-sans;
   }
 
   :focus-visible {
-    outline: 2px solid #1d4a38;
+    outline: 2px solid #b8432f;
     outline-offset: 2px;
   }
-}
 
-.shadow-card {
-  box-shadow: 0 1px 0 rgba(28, 25, 21, 0.04), 0 24px 50px -32px rgba(28, 25, 21, 0.55);
+  dialog {
+    margin: auto;
+    padding: 0;
+    background: #f4f2ed;
+    color: #141311;
+  }
+
+  dialog::backdrop {
+    background: rgba(20, 19, 17, 0.5);
+  }
 }
 
 @page {

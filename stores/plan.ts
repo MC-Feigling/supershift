@@ -20,6 +20,7 @@ import {
 } from '~/utils/plan-api'
 import {
   normalizeEmail,
+  normalizeNote,
   normalizeShiftName,
   placementsConflict,
   validatePlacement,
@@ -139,14 +140,15 @@ export const usePlanStore = defineStore('plan', () => {
 
   async function createPlacement(draft: PlacementDraft): Promise<void> {
     assertOwnPlan()
+    const cleaned: PlacementDraft = { ...draft, note: normalizeNote(draft.note ?? '') }
     const knownIds = shiftTypes.value.map((shiftType: ShiftType) => shiftType.id)
-    const draftError = validatePlacement(draft, knownIds)
+    const draftError = validatePlacement(cleaned, knownIds)
     if (draftError) throw new AppError(draftError)
-    if (placementsConflict(placements.value, draft)) {
+    if (placementsConflict(placements.value, cleaned)) {
       throw new AppError('Diese Schicht liegt an einem dieser Tage schon.')
     }
     await mutate(async (client, user) => {
-      await insertPlacement(client, user.id, draft)
+      await insertPlacement(client, user.id, cleaned)
     })
   }
 
@@ -160,11 +162,14 @@ export const usePlanStore = defineStore('plan', () => {
   async function invite(email: string): Promise<void> {
     const user = readUser()
     if (!user) throw new AppError('Nicht angemeldet.')
-    const emailError = validateShareEmail(email, user.email)
-    if (emailError) throw new AppError(emailError)
+    const trimmed = email.trim()
+    if (trimmed) {
+      const emailError = validateShareEmail(trimmed, user.email)
+      if (emailError) throw new AppError(emailError)
+    }
     if (outgoingShare.value) throw new AppError('Es gibt schon eine offene Freigabe. Zieh sie zuerst zurück.')
     await mutate(async (client, currentUser) => {
-      await insertShare(client, currentUser.id, normalizeEmail(email))
+      await insertShare(client, currentUser.id, trimmed ? normalizeEmail(trimmed) : '')
     })
   }
 

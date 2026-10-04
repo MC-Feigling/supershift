@@ -23,18 +23,30 @@ export function isSessionExpired(error: unknown): boolean {
 }
 
 function mapPostgrestError(error: PostgrestError): string {
-  if (error.code === POSTGRES_ERROR.undefinedTable || error.code === POSTGREST_ERROR.schemaCache) {
+  if (
+    error.code === POSTGRES_ERROR.undefinedTable
+    || error.code === POSTGRES_ERROR.undefinedColumn
+    || error.code === POSTGREST_ERROR.schemaCache
+    || error.code === POSTGREST_ERROR.functionNotFound
+  ) {
     return 'Die Tabellen fehlen noch. Spiele die Migration aus supabase/migrations ein.'
   }
   if (error.code === POSTGRES_ERROR.insufficientPrivilege) return 'Dafür fehlt die Berechtigung.'
   if (error.code === POSTGREST_ERROR.jwt) return 'Die Sitzung ist abgelaufen. Melde dich erneut an.'
-  if (error.message.includes(DB_ERROR.selfShare)) return 'Du kannst den Plan nicht mit dir selbst teilen.'
-  if (error.message.includes(DB_ERROR.onlyRevoke)) return 'Eine Freigabe kann nur zurückgezogen werden.'
-  if (error.message.includes(DB_ERROR.shiftTypeMismatch)) return 'Die Schicht gehört nicht zu diesem Plan.'
-  if (error.message.includes(DB_ERROR.seriesEnd)) return 'Das Enddatum der Serie ist ungültig.'
+  const detail = `${error.message} ${error.details}`
+  if (detail.includes(DB_ERROR.selfShare)) return 'Du kannst den Plan nicht mit dir selbst teilen.'
+  if (detail.includes(DB_ERROR.onlyRevoke)) return 'Eine Freigabe kann nur zurückgezogen werden.'
+  if (detail.includes(DB_ERROR.shiftTypeMismatch)) return 'Die Schicht gehört nicht zu diesem Plan.'
+  if (detail.includes(DB_ERROR.seriesEnd)) return 'Das Enddatum der Serie ist ungültig.'
+  if (detail.includes(DB_ERROR.inviteRevoked)) return 'Die Einladung wurde zurückgezogen.'
+  if (detail.includes(DB_ERROR.inviteTaken)) return 'Die Einladung wurde schon angenommen.'
+  if (detail.includes(DB_ERROR.inviteEmail)) return 'Diese Einladung gilt für eine andere E-Mail-Adresse.'
+  if (detail.includes(DB_ERROR.inviteUnconfirmed)) return 'Bestätige zuerst die E-Mail, dann öffne den Link erneut.'
+  if (detail.includes(DB_ERROR.inviteInvalid)) return 'Der Link ist ungültig.'
+  if (detail.includes(DB_ERROR.notAuthenticated)) return 'Melde dich an, um die Einladung anzunehmen.'
   if (error.code === POSTGRES_ERROR.uniqueViolation) {
-    if (error.message.includes(CONSTRAINTS.shiftName)) return 'Diesen Namen gibt es schon.'
-    if (error.message.includes(CONSTRAINTS.oneShare)) {
+    if (detail.includes(CONSTRAINTS.shiftName)) return 'Diesen Namen gibt es schon.'
+    if (detail.includes(CONSTRAINTS.oneShare)) {
       return 'Es gibt schon eine offene Freigabe. Zieh sie zuerst zurück.'
     }
     return 'Dieser Eintrag existiert schon.'

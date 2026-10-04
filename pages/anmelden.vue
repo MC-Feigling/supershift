@@ -32,7 +32,7 @@ async function onSubmit(payload: { email: string, password: string }): Promise<v
       :pending="pending"
       :form-error="formError"
       info=""
-      :alternate-href="ROUTES.signUp"
+      :alternate-href="ROUTES.home"
       alternate-prompt="Noch kein Konto?"
       alternate-label="Registrieren"
       @submit="onSubmit"

@@ -12,14 +12,14 @@ const props = withDefaults(defineProps<{
 })
 
 const variantClass = computed(() => {
-  if (props.variant === 'secondary') return 'bg-card text-ink ring-1 ring-line hover:bg-sand'
-  if (props.variant === 'danger') return 'bg-card text-clay ring-1 ring-line hover:bg-sand'
-  if (props.variant === 'ghost') return 'bg-transparent text-ink hover:bg-sand'
-  return 'bg-spruce text-white hover:bg-spruce-deep'
+  if (props.variant === 'secondary') return 'border-line bg-card text-ink hover:border-ink'
+  if (props.variant === 'danger') return 'border-accent bg-card text-accent hover:bg-accent hover:text-paper'
+  if (props.variant === 'ghost') return 'border-transparent bg-transparent text-ink hover:border-line'
+  return 'border-ink bg-ink text-paper hover:bg-steel'
 })
 
 const buttonClass = computed(() => [
-  'inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50',
+  'inline-flex items-center justify-center border px-3 py-2 text-xs font-medium uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-40',
   variantClass.value,
   props.block ? 'w-full' : '',
 ])

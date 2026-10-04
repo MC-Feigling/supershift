@@ -4,11 +4,11 @@ import { formatDay, formatMonth, shiftMonth, startOfMonth, todayIso, toIsoDate }
 export function useCalendar() {
   const plan = usePlanStore()
   const visibleMonth = ref(startOfMonth(new Date()))
-  const selectedIso = ref(todayIso())
+  const selectedIso = ref('')
 
   const monthLabel = computed(() => formatMonth(visibleMonth.value))
   const anchorIso = computed(() => toIsoDate(visibleMonth.value))
-  const selectedLabel = computed(() => formatDay(selectedIso.value))
+  const selectedLabel = computed(() => selectedIso.value ? formatDay(selectedIso.value) : '')
   const cells = computed(() => buildCalendarCells(
     visibleMonth.value,
     todayIso(),
@@ -26,20 +26,20 @@ export function useCalendar() {
     selectedIso.value = iso
   }
 
+  function clearSelection(): void {
+    selectedIso.value = ''
+  }
+
   function nextMonth(): void {
     visibleMonth.value = shiftMonth(visibleMonth.value, 1)
-    selectedIso.value = toIsoDate(visibleMonth.value)
   }
 
   function previousMonth(): void {
     visibleMonth.value = shiftMonth(visibleMonth.value, -1)
-    selectedIso.value = toIsoDate(visibleMonth.value)
   }
 
   function goToday(): void {
-    const today = new Date()
-    visibleMonth.value = startOfMonth(today)
-    selectedIso.value = todayIso()
+    visibleMonth.value = startOfMonth(new Date())
   }
 
   return {
@@ -50,6 +50,7 @@ export function useCalendar() {
     cells,
     selectedEntries,
     selectDay,
+    clearSelection,
     nextMonth,
     previousMonth,
     goToday,

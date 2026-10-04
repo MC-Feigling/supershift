@@ -15,7 +15,7 @@ export function buildCalendarCells(
     const chips = chipsForDay(day.iso, placements, shiftTypes)
     const visible = chips.slice(0, MAX_VISIBLE_DAY_CHIPS)
     const hidden = chips.length - visible.length
-    const names = chips.map((chip) => chip.name).join(', ')
+    const names = chips.map((chip) => chip.note ? `${chip.name}. Notiz ${chip.note}` : chip.name).join(', ')
     return {
       iso: day.iso,
       dayNumber: day.dayNumber,
@@ -45,6 +45,7 @@ export function entriesForDay(
     entries.push({
       placementId: placement.id,
       name,
+      note: placement.note,
       background: color.background,
       color: color.color,
       detail: placementDetail(placement),
@@ -58,6 +59,7 @@ function chipsForDay(iso: string, placements: readonly Placement[], shiftTypes: 
   return entriesForDay(iso, placements, shiftTypes).map((entry) => ({
     placementId: entry.placementId,
     name: entry.name,
+    note: entry.note,
     background: entry.background,
     color: entry.color,
   }))

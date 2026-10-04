@@ -3,6 +3,10 @@ import { ROUTES, SESSION_STATE_KEY } from '~/utils/constants'
 import { AppError, toGermanError } from '~/utils/errors'
 import { normalizeEmail, validateCredentials } from '~/utils/validation'
 
+interface AuthOptions {
+  redirect?: boolean
+}
+
 export interface AuthResult {
   needsConfirmation: boolean
 }
@@ -11,7 +15,7 @@ export function useSession() {
   const user = useState<SessionUser | null>(SESSION_STATE_KEY, () => null)
   const requestUrl = useRequestURL()
 
-  async function signIn(email: string, password: string): Promise<void> {
+  async function signIn(email: string, password: string, options?: AuthOptions): Promise<void> {
     const errors = validateCredentials(email, password)
     if (errors.email || errors.password) throw new AppError(errors.email ?? errors.password ?? 'Eingabe prüfen.')
     const supabase = requireSupabase()
@@ -22,23 +26,23 @@ export function useSession() {
     if (error) throw new AppError(toGermanError(error))
     if (!data.user) throw new AppError('Die Anmeldung ist fehlgeschlagen. Versuch es noch einmal.')
     user.value = { id: data.user.id, email: data.user.email ?? normalizeEmail(email) }
-    await navigateTo(ROUTES.home)
+    if (options?.redirect !== false) await navigateTo(ROUTES.home)
   }
 
-  async function signUp(email: string, password: string): Promise<AuthResult> {
+  async function signUp(email: string, password: string, options?: AuthOptions): Promise<AuthResult> {
     const errors = validateCredentials(email, password)
     if (errors.email || errors.password) throw new AppError(errors.email ?? errors.password ?? 'Eingabe prüfen.')
     const supabase = requireSupabase()
     const { data, error } = await supabase.auth.signUp({
       email: normalizeEmail(email),
       password,
-      options: { emailRedirectTo: `${requestUrl.origin}${ROUTES.signIn}` },
+      options: { emailRedirectTo: `${requestUrl.origin}${ROUTES.confirm}` },
     })
     if (error) throw new AppError(toGermanError(error))
     if (!data.user) throw new AppError('Das Konto konnte nicht angelegt werden.')
     if (!data.session) return { needsConfirmation: true }
     user.value = { id: data.user.id, email: data.user.email ?? normalizeEmail(email) }
-    await navigateTo(ROUTES.home)
+    if (options?.redirect !== false) await navigateTo(ROUTES.home)
     return { needsConfirmation: false }
   }
 

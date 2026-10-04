@@ -10,22 +10,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: '#f3eee4',
-        sand: '#ebe4d6',
-        card: '#fffdf8',
-        ink: '#1c1915',
-        muted: '#6e665c',
-        line: '#e4d9c8',
-        spruce: {
-          DEFAULT: '#1d4a38',
-          deep: '#143528',
-          soft: '#e4f0ea',
-        },
-        clay: '#8d3b2c',
+        paper: '#e4e1da',
+        concrete: '#d4d0c6',
+        card: '#f4f2ed',
+        ink: '#141311',
+        steel: '#3e444c',
+        muted: '#5e5a54',
+        line: '#c8c4bb',
+        accent: '#b8432f',
       },
       fontFamily: {
-        display: ['Fraunces', 'Iowan Old Style', 'Palatino', 'Georgia', 'serif'],
-        sans: ['Source Sans 3', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['IBM Plex Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       maxWidth: {
         page: '72rem',
