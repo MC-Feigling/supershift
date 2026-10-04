@@ -29,9 +29,9 @@ async function onSignOut(): Promise<void> {
 </script>
 
 <template>
-  <header class="border-b border-line bg-paper/90 backdrop-blur">
+  <header class="border-b border-line bg-sand/90 backdrop-blur">
     <div class="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4 sm:px-6">
-      <NuxtLink :to="ROUTES.home" class="rounded-full" aria-label="Schichtwerk">
+      <NuxtLink :to="ROUTES.home" class="rounded-sm" aria-label="Schichtwerk">
         <AppMark />
       </NuxtLink>
       <nav class="flex items-center gap-1" aria-label="Hauptnavigation">
@@ -39,15 +39,15 @@ async function onSignOut(): Promise<void> {
           v-for="item in items"
           :key="item.to"
           :to="item.to"
-          class="rounded-full px-3 py-2 text-sm font-semibold text-muted hover:bg-sand hover:text-ink"
-          :class="item.current ? 'bg-sand text-ink' : ''"
+          class="rounded-sm px-3 py-2 font-mono text-[11px] font-medium uppercase tracking-stencil text-muted hover:bg-card hover:text-ink"
+          :class="item.current ? 'bg-card text-ink ring-1 ring-line' : ''"
           :aria-current="item.current ? 'page' : undefined"
         >
           {{ item.label }}
         </NuxtLink>
       </nav>
       <div class="ml-auto flex items-center gap-3">
-        <p class="hidden max-w-[14rem] truncate text-sm text-muted sm:block">{{ emailLabel }}</p>
+        <p class="hidden max-w-[14rem] truncate font-mono text-[11px] uppercase tracking-wide text-muted sm:block">{{ emailLabel }}</p>
         <AppButton variant="secondary" :disabled="signingOut" @click="onSignOut">
           Abmelden
         </AppButton>

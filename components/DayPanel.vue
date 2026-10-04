@@ -77,11 +77,11 @@ function confirmRemove(): void {
 </script>
 
 <template>
-  <aside class="rounded-[2rem] border border-line bg-card p-5 shadow-card">
-    <p class="text-xs font-semibold uppercase tracking-wide text-muted">Ausgewählter Tag</p>
-    <h2 class="mt-1 font-display text-3xl font-medium leading-tight">{{ dayLabel }}</h2>
+  <aside class="panel">
+    <p class="label-meta">Ausgewählter Tag</p>
+    <h2 class="mt-1 font-display text-3xl font-medium uppercase leading-tight tracking-wide">{{ dayLabel }}</h2>
 
-    <p v-if="readOnly" class="mt-4 rounded-2xl bg-spruce-soft px-3 py-2 text-sm text-spruce-deep">
+    <p v-if="readOnly" class="mt-4 rounded-sm bg-spruce-soft px-3 py-2 text-sm text-spruce">
       Nur lesen. Diesen Plan hat jemand mit dir geteilt.
     </p>
 
@@ -89,7 +89,7 @@ function confirmRemove(): void {
       <li
         v-for="entry in entries"
         :key="entry.placementId"
-        class="rounded-2xl px-3 py-3"
+        class="rounded-sm px-3 py-3"
         :style="{ backgroundColor: entry.background, color: entry.color }"
       >
         <p class="font-semibold">{{ entry.name }}</p>
@@ -106,7 +106,7 @@ function confirmRemove(): void {
     </ul>
     <p v-else class="mt-5 text-sm text-muted">Keine Schicht an diesem Tag.</p>
 
-    <div v-if="pendingEntry" class="mt-4 rounded-2xl bg-sand px-3 py-3">
+    <div v-if="pendingEntry" class="mt-4 rounded-sm bg-sand px-3 py-3">
       <p class="text-sm font-semibold">{{ confirmTitle }}</p>
       <p class="mt-1 text-sm text-muted">Der Eintrag verschwindet aus dem Plan. Eine Serie wird ganz entfernt.</p>
       <div class="mt-3 flex gap-2">
@@ -117,11 +117,11 @@ function confirmRemove(): void {
 
     <form v-if="!readOnly && !showShiftLink" class="mt-6 space-y-4" @submit.prevent="submit">
       <label class="block" for="shift-choice">
-        <span class="mb-1.5 block text-sm font-semibold">Schicht</span>
+        <span class="label-meta mb-1.5 block">Schicht</span>
         <select
           id="shift-choice"
           :value="shiftTypeId"
-          class="w-full rounded-2xl border border-line bg-paper px-3.5 py-3 text-base"
+          class="w-full rounded-sm border border-line bg-sand px-3.5 py-3 text-base"
           @change="onShiftChange"
         >
           <option value="">Schicht wählen</option>

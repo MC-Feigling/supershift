@@ -16,14 +16,14 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'description', content: 'Persönlicher Schichtplan, teilbar mit einer Person.' },
         { name: 'robots', content: 'noindex' },
-        { name: 'theme-color', content: '#f3eee4' },
+        { name: 'theme-color', content: '#141618' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'preconnect', href: 'https://fonts.bunny.net' },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.bunny.net/css?family=fraunces:500,620|source-sans-3:400,500,600',
+          href: 'https://fonts.bunny.net/css?family=oswald:500,600|ibm-plex-sans:400,500,600|ibm-plex-mono:400,500',
         },
       ],
     },

@@ -10,25 +10,31 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: '#f3eee4',
-        sand: '#ebe4d6',
-        card: '#fffdf8',
-        ink: '#1c1915',
-        muted: '#6e665c',
-        line: '#e4d9c8',
+        paper: '#141618',
+        sand: '#1c1f24',
+        card: '#23272e',
+        ink: '#ebe6dc',
+        muted: '#9a9286',
+        line: '#3c414b',
         spruce: {
-          DEFAULT: '#1d4a38',
-          deep: '#143528',
-          soft: '#e4f0ea',
+          DEFAULT: '#d4a24c',
+          deep: '#a67c2d',
+          soft: '#2f2a1d',
         },
-        clay: '#8d3b2c',
+        clay: '#d06a45',
+        workshop: '#f3eee4',
+        coal: '#1a1b1d',
       },
       fontFamily: {
-        display: ['Fraunces', 'Iowan Old Style', 'Palatino', 'Georgia', 'serif'],
-        sans: ['Source Sans 3', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Oswald', 'Impact', 'Arial Narrow', 'sans-serif'],
+        sans: ['IBM Plex Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       maxWidth: {
         page: '72rem',
+      },
+      letterSpacing: {
+        stencil: '0.16em',
       },
     },
   },
