@@ -32,7 +32,7 @@ function onInput(event: Event): void {
 
 <template>
   <label class="block" :for="id">
-    <span class="mb-1.5 block text-sm font-semibold text-ink">{{ label }}</span>
+    <span class="label-meta mb-1.5 block">{{ label }}</span>
     <input
       :id="id"
       :type="type"
@@ -42,7 +42,7 @@ function onInput(event: Event): void {
       :disabled="disabled"
       :aria-invalid="invalid"
       :aria-describedby="errorId"
-      class="w-full rounded-2xl border border-line bg-card px-3.5 py-3 text-base text-ink outline-none ring-spruce placeholder:text-muted focus:border-spruce focus:ring-2 disabled:opacity-60"
+      class="w-full rounded-sm border border-line bg-paper px-3.5 py-3 text-base text-ink outline-none ring-spruce placeholder:text-muted focus:border-spruce focus:ring-2 disabled:opacity-60"
       @input="onInput"
     >
     <span v-if="error" :id="errorId" class="mt-1.5 block text-sm text-clay">{{ error }}</span>

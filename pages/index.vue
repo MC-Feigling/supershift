@@ -90,7 +90,7 @@ async function retry(): Promise<void> {
           <span class="sr-only">Geteilter Plan</span>
           <select
             :value="selectedOwnerValue"
-            class="rounded-full border border-line bg-card px-3 py-2"
+            class="rounded-sm border border-line bg-card px-3 py-2"
             @change="onOwnerChange"
           >
             <option v-for="share in plan.incomingShares" :key="share.id" :value="share.ownerId">
@@ -100,10 +100,10 @@ async function retry(): Promise<void> {
         </label>
       </div>
       <div class="flex flex-wrap gap-2">
-        <NuxtLink :to="weekHref" class="inline-flex items-center rounded-full bg-card px-4 py-2.5 text-sm font-semibold ring-1 ring-line hover:bg-sand">
+        <NuxtLink :to="weekHref" class="inline-flex items-center rounded-sm bg-card px-4 py-2.5 font-mono text-[11px] font-medium uppercase tracking-stencil ring-1 ring-line hover:bg-sand">
           Woche drucken
         </NuxtLink>
-        <NuxtLink :to="monthHref" class="inline-flex items-center rounded-full bg-card px-4 py-2.5 text-sm font-semibold ring-1 ring-line hover:bg-sand">
+        <NuxtLink :to="monthHref" class="inline-flex items-center rounded-sm bg-card px-4 py-2.5 font-mono text-[11px] font-medium uppercase tracking-stencil ring-1 ring-line hover:bg-sand">
           Monat drucken
         </NuxtLink>
       </div>

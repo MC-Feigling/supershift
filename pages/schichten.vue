@@ -96,7 +96,7 @@ async function retry(): Promise<void> {
 
 <template>
   <section class="mx-auto max-w-xl">
-    <h1 class="font-display text-4xl font-medium tracking-tight">Schichten</h1>
+    <h1 class="display-title text-4xl">Schichten</h1>
     <p class="mt-2 text-base leading-7 text-muted">
       Nur der Name zählt. Die Farbe bleibt am Namen, damit Tage im Kalender unterscheidbar sind.
     </p>
@@ -107,7 +107,7 @@ async function retry(): Promise<void> {
     </StatusNote>
 
     <div v-else class="mt-6 space-y-4">
-      <form class="rounded-[2rem] border border-line bg-card p-5 shadow-card" @submit.prevent="createShift">
+      <form class="panel" @submit.prevent="createShift">
         <TextField
           id="new-shift"
           label="Neue Schicht"
@@ -125,9 +125,9 @@ async function retry(): Promise<void> {
       <StatusNote v-if="isEmpty" tone="empty" title="Noch keine Schichten" body="Zum Beispiel Früh, Spät oder Frei." />
 
       <ul v-else class="space-y-3">
-        <li v-for="row in rows" :key="row.id" class="rounded-[1.5rem] border border-line bg-card p-4">
+        <li v-for="row in rows" :key="row.id" class="rounded-sm border border-line bg-card p-4">
           <div class="flex items-center gap-3">
-            <span class="h-3 w-3 rounded-full" :style="{ backgroundColor: row.color }" />
+            <span class="h-3 w-3 rounded-sm" :style="{ backgroundColor: row.color }" />
             <p v-if="!row.isEditing" class="font-semibold">{{ row.name }}</p>
           </div>
           <div v-if="row.isEditing" class="mt-3 space-y-3">

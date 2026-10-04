@@ -81,7 +81,7 @@ async function retry(): Promise<void> {
 <template>
   <article class="mx-auto max-w-page px-4 py-8 sm:px-8">
     <div class="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-      <NuxtLink :to="homePath" class="text-sm font-semibold text-spruce underline underline-offset-2">
+      <NuxtLink :to="homePath" class="font-mono text-[11px] font-medium uppercase tracking-stencil text-spruce-deep underline underline-offset-2">
         Zurück zum Kalender
       </NuxtLink>
       <AppButton @click="printDocument">Drucken</AppButton>
@@ -95,22 +95,22 @@ async function retry(): Promise<void> {
     <StatusNote v-else-if="missingShare" tone="empty" title="Kein geteilter Plan" body="Dir wurde gerade kein Plan zum Lesen freigegeben." />
 
     <div v-else>
-      <header class="border-b border-line pb-4">
-        <p class="text-xs font-semibold uppercase tracking-wide text-muted">Schichtwerk</p>
-        <h1 class="mt-1 font-display text-4xl font-medium">{{ heading }}</h1>
+      <header class="border-b-2 border-coal pb-4">
+        <p class="font-mono text-[11px] font-medium uppercase tracking-stencil text-coal/60">Schichtwerk</p>
+        <h1 class="display-title mt-1 text-4xl">{{ heading }}</h1>
         <p class="mt-2 text-lg">{{ periodLabel }}</p>
-        <p class="text-sm text-muted">{{ personLabel }}</p>
+        <p class="font-mono text-sm text-coal/70">{{ personLabel }}</p>
       </header>
 
-      <div v-if="isWeek" class="mt-6 grid gap-3 sm:grid-cols-7">
-        <section v-for="column in weekColumns" :key="column.iso" class="print-day rounded-2xl border border-line p-3">
+      <div v-if="isWeek" class="mt-6 grid gap-px bg-coal/20 sm:grid-cols-7">
+        <section v-for="column in weekColumns" :key="column.iso" class="print-day bg-workshop p-3">
           <h2 class="text-sm font-semibold">{{ column.label }}</h2>
-          <p v-if="column.isEmpty" class="mt-3 text-sm text-muted">Keine Schicht</p>
+          <p v-if="column.isEmpty" class="mt-3 text-sm text-coal/60">Keine Schicht</p>
           <ul v-else class="mt-3 space-y-2">
             <li
               v-for="entry in column.entries"
               :key="entry.placementId"
-              class="rounded-xl px-2 py-1 text-sm font-semibold"
+              class="rounded-sm px-2 py-1 text-sm font-semibold"
               :style="{ backgroundColor: entry.background, color: entry.color }"
             >
               {{ entry.name }}
@@ -120,21 +120,21 @@ async function retry(): Promise<void> {
       </div>
 
       <div v-else class="mt-6">
-        <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase text-muted">
-          <span v-for="label in weekdayLabels" :key="label">{{ label }}</span>
+        <div class="grid grid-cols-7 gap-px bg-coal/20 text-center">
+          <span v-for="label in weekdayLabels" :key="label" class="bg-workshop py-2 font-mono text-[11px] font-medium uppercase tracking-stencil text-coal/60">{{ label }}</span>
         </div>
-        <div class="mt-1 grid grid-cols-7 gap-1">
+        <div class="grid grid-cols-7 gap-px bg-coal/20">
           <section
             v-for="cell in monthCells"
             :key="cell.iso"
-            class="print-day min-h-24 rounded-xl border border-line p-1.5"
-            :class="cell.inMonth ? 'bg-white' : 'bg-sand/60'"
+            class="print-day min-h-24 p-1.5"
+            :class="cell.inMonth ? 'bg-white' : 'bg-[#e6e0d4]'"
           >
-            <p class="text-xs font-semibold">{{ cell.dayNumber }}</p>
+            <p class="font-mono text-xs font-medium">{{ cell.dayNumber }}</p>
             <p
               v-for="entry in cell.entries"
               :key="entry.placementId"
-              class="mt-1 truncate rounded-full px-1 text-[10px] font-semibold"
+              class="mt-1 truncate rounded-sm px-1 text-[10px] font-semibold"
               :style="{ backgroundColor: entry.background, color: entry.color }"
             >
               {{ entry.name }}

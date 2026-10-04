@@ -44,8 +44,8 @@ function submit(): void {
 </script>
 
 <template>
-  <div>
-    <h1 class="font-display text-4xl font-medium tracking-tight">{{ title }}</h1>
+  <div class="panel">
+    <h1 class="display-title text-4xl">{{ title }}</h1>
     <p class="mt-2 text-base leading-7 text-muted">{{ lead }}</p>
     <form class="mt-8 space-y-4" @submit.prevent="submit">
       <TextField
@@ -69,7 +69,7 @@ function submit(): void {
         @update:model-value="onPassword"
       />
       <p v-if="formError" class="text-sm text-clay" role="alert">{{ formError }}</p>
-      <p v-if="info" class="text-sm text-spruce-deep" role="status">{{ info }}</p>
+      <p v-if="info" class="text-sm text-spruce" role="status">{{ info }}</p>
       <AppButton type="submit" :disabled="pending" block>{{ pendingLabel }}</AppButton>
     </form>
     <p class="mt-6 text-sm text-muted">
