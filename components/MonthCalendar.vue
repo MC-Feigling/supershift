@@ -17,11 +17,30 @@ const emit = defineEmits<{
 }>()
 
 const weekdayLabels = WEEKDAY_LABELS
+const gridRef = ref<HTMLElement | null>(null)
 
 const press = usePressHold<string>({
   onTap: (iso: string) => emit('select', iso),
   onHold: (iso: string) => emit('quick', iso),
 })
+
+function isoFromEvent(event: Event): string | null {
+  const target = event.target
+  const origin = target instanceof Element
+    ? target
+    : target instanceof Node
+      ? target.parentElement
+      : null
+  if (!origin) return null
+  const cell = origin.closest('[data-iso]')
+  if (!(cell instanceof HTMLElement)) return null
+  return cell.dataset.iso ?? null
+}
+
+watch(gridRef, (el: HTMLElement | null) => {
+  press.detach()
+  if (el) press.attach(el, isoFromEvent)
+}, { flush: 'post' })
 </script>
 
 <template>
@@ -39,11 +58,13 @@ const press = usePressHold<string>({
     <div class="grid grid-cols-7 border-b border-ink/20 text-center">
       <span v-for="label in weekdayLabels" :key="label" class="label-meta border-r border-ink/20 py-2 last:border-r-0">{{ label }}</span>
     </div>
-    <div class="grid grid-cols-7">
+    <div ref="gridRef" class="grid grid-cols-7">
       <button
         v-for="cell in cells"
         :key="cell.iso"
         type="button"
+        draggable="false"
+        :data-iso="cell.iso"
         :aria-label="cell.label"
         :aria-pressed="cell.isSelected"
         :aria-haspopup="canQuickPick ? 'dialog' : undefined"
@@ -56,8 +77,7 @@ const press = usePressHold<string>({
         @pointerdown="press.onPointerDown(cell.iso, $event)"
         @pointermove="press.onPointerMove($event)"
         @pointerup="press.onPointerUp($event)"
-        @pointercancel="press.onPointerCancel()"
-        @lostpointercapture="press.onPointerCancel()"
+        @pointercancel="press.onPointerCancel($event)"
         @click="press.onClick(cell.iso, $event)"
         @contextmenu="press.onContextMenu(cell.iso, $event)"
       >
