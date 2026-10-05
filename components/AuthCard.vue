@@ -7,6 +7,8 @@ const props = defineProps<{
   submitLabel: string
   pending: boolean
   formError: string
+  appleError: string
+  appleFrom: string
   info: string
   alternateHref: string
   alternatePrompt: string
@@ -72,6 +74,7 @@ function submit(): void {
       <p v-if="info" class="text-sm text-spruce" role="status">{{ info }}</p>
       <AppButton type="submit" :disabled="pending" block>{{ pendingLabel }}</AppButton>
     </form>
+    <AppleSignIn :disabled="pending" :from="appleFrom" :error="appleError" />
     <p class="mt-6 text-sm text-muted">
       {{ alternatePrompt }}
       <NuxtLink :to="alternateHref" class="font-semibold text-spruce underline underline-offset-2">

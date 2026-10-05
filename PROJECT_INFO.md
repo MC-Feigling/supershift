@@ -4,7 +4,7 @@ Persönlicher Schichtplan. Eine angemeldete Person führt ihn und kann ihn mit g
 
 ## Umfang
 
-- Anmeldung mit E-Mail und Passwort
+- Anmeldung mit E-Mail und Passwort oder Apple-ID
 - Schichten nur als Name
 - Monatskalender, Eintrag auf einen Tag, optionale Notiz, optionale wöchentliche Serie bis zu einem Datum
 - Push-Meldung an die Person mit Leserecht, wenn etwas eingetragen oder entfernt wird

@@ -19,7 +19,28 @@ export const ROUTES = {
   setup: '/einrichten',
   shifts: '/schichten',
   share: '/teilen',
+  apple: '/auth/apple',
+  authCallback: '/auth/callback',
 } as const
+
+export const APPLE_AUTH_FROM = {
+  signIn: 'anmelden',
+  signUp: 'registrieren',
+} as const
+
+export const APPLE_AUTH_ERROR = {
+  cancelled: 'abbruch',
+  unavailable: 'aus',
+  failed: 'fehler',
+} as const
+
+export const APPLE_AUTH_QUERY = {
+  from: 'von',
+  error: 'fehler',
+} as const
+
+export const APPLE_AUTH_FROM_COOKIE = 'apple-auth-from'
+export const APPLE_AUTH_FROM_MAX_AGE_SECONDS = 600
 
 export const SESSION_STATE_KEY = 'session-user'
 export const SERVICE_WORKER_PATH = '/sw.js'
