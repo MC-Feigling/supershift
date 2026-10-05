@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DayEntry, PlacementDraft, ShiftOption } from '~/types/plan'
-import { NOTE_MAX_LENGTH, ROUTES, SHIFT_NAME_MAX_LENGTH } from '~/utils/constants'
+import { DAY_PANEL_TITLE_ID, NOTE_MAX_LENGTH, ROUTES, SHIFT_NAME_MAX_LENGTH } from '~/utils/constants'
 
 const props = defineProps<{
   iso: string
@@ -33,6 +33,7 @@ const confirmTitle = computed(() => pendingEntry.value ? `${pendingEntry.value.n
 const shiftsLink = ROUTES.shifts
 const nameMax = SHIFT_NAME_MAX_LENGTH
 const noteMax = NOTE_MAX_LENGTH
+const titleId = DAY_PANEL_TITLE_ID
 
 function onShiftChange(event: Event): void {
   const target = event.target
@@ -90,8 +91,13 @@ watch(() => props.entries.map((entry) => entry.placementId), (ids: string[], pre
 </script>
 
 <template>
-  <aside class="panel">
-    <h2 class="display-title text-3xl leading-tight">{{ dayLabel }}</h2>
+  <div class="panel">
+    <div class="flex items-start justify-between gap-3">
+      <h2 :id="titleId" class="display-title text-3xl leading-tight">{{ dayLabel }}</h2>
+      <div v-if="$slots.actions" class="shrink-0">
+        <slot name="actions" />
+      </div>
+    </div>
 
     <p v-if="readOnly" class="mt-4 rounded-sm bg-spruce-soft px-3 py-2 text-sm text-spruce">
       Nur lesen. Diesen Plan hat jemand mit dir geteilt.
@@ -175,5 +181,5 @@ watch(() => props.entries.map((entry) => entry.placementId), (ids: string[], pre
         </NuxtLink>
       </StatusNote>
     </div>
-  </aside>
+  </div>
 </template>

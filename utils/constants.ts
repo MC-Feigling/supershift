@@ -23,6 +23,7 @@ export const ROUTES = {
 
 export const SESSION_STATE_KEY = 'session-user'
 export const SERVICE_WORKER_PATH = '/sw.js'
+export const DAY_PANEL_TITLE_ID = 'day-panel-title'
 
 export const TABLES = {
   shiftTypes: 'shift_types',

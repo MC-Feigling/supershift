@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PlacementDraft, ShiftOption, ShiftType } from '~/types/plan'
+import { DAY_PANEL_TITLE_ID } from '~/utils/constants'
 import { toGermanError } from '~/utils/errors'
 
 definePageMeta({ layout: 'default' })
@@ -19,6 +20,9 @@ const {
   goToday,
 } = useCalendar()
 const actionError = ref('')
+const editorOpen = ref(false)
+const editorRef = ref<HTMLDialogElement | null>(null)
+const dayPanelTitleId = DAY_PANEL_TITLE_ID
 
 const showInitialLoading = computed(() => plan.status === 'loading' && !plan.hasLoaded)
 const showBlockingError = computed(() => plan.status === 'error' && !plan.hasLoaded)
@@ -43,7 +47,27 @@ const showPushHint = computed(() => plan.incomingShares.length > 0 && pushStatus
 function selectDay(iso: string): void {
   actionError.value = ''
   setSelectedDay(iso)
+  editorOpen.value = true
 }
+
+function closeEditor(): void {
+  editorRef.value?.close()
+}
+
+function onDialogClose(): void {
+  editorOpen.value = false
+}
+
+function onDialogClick(event: MouseEvent): void {
+  if (event.target === editorRef.value) closeEditor()
+}
+
+watch(editorOpen, async (open) => {
+  if (!open) return
+  await nextTick()
+  const dialog = editorRef.value
+  if (dialog && !dialog.open) dialog.showModal()
+})
 
 function onOwnerChange(event: Event): void {
   const target = event.target
@@ -121,32 +145,42 @@ async function retry(): Promise<void> {
     >
       <AppButton @click="retry">Erneut laden</AppButton>
     </StatusNote>
-    <div v-else class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div>
-        <p v-if="inlineError" class="mb-4 text-sm text-clay" role="alert">{{ inlineError }}</p>
-        <MonthCalendar
-          :month-label="monthLabel"
-          :cells="cells"
-          @select="selectDay"
-          @previous="previousMonth"
-          @next="nextMonth"
-          @today="goToday"
-        />
-      </div>
-      <DayPanel
-        :key="selectedIso"
-        :iso="selectedIso"
-        :day-label="selectedLabel"
-        :entries="selectedEntries"
-        :shift-options="shiftOptions"
-        :read-only="plan.readOnly"
-        :saving="plan.isSaving"
-        :action-error="actionError"
-        :show-shift-link="showShiftLink"
-        :is-empty="isSelectedEmpty"
-        @create="onCreate"
-        @remove="onRemove"
+    <div v-else>
+      <p v-if="inlineError" class="mb-4 text-sm text-clay" role="alert">{{ inlineError }}</p>
+      <MonthCalendar
+        :month-label="monthLabel"
+        :cells="cells"
+        @select="selectDay"
+        @previous="previousMonth"
+        @next="nextMonth"
+        @today="goToday"
       />
+      <dialog
+        ref="editorRef"
+        class="day-dialog"
+        :aria-labelledby="dayPanelTitleId"
+        @close="onDialogClose"
+        @click="onDialogClick"
+      >
+        <DayPanel
+          :key="selectedIso"
+          :iso="selectedIso"
+          :day-label="selectedLabel"
+          :entries="selectedEntries"
+          :shift-options="shiftOptions"
+          :read-only="plan.readOnly"
+          :saving="plan.isSaving"
+          :action-error="actionError"
+          :show-shift-link="showShiftLink"
+          :is-empty="isSelectedEmpty"
+          @create="onCreate"
+          @remove="onRemove"
+        >
+          <template #actions>
+            <AppButton variant="ghost" @click="closeEditor">Schließen</AppButton>
+          </template>
+        </DayPanel>
+      </dialog>
     </div>
   </div>
 </template>
