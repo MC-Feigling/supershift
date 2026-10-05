@@ -19,7 +19,12 @@ export const ROUTES = {
   setup: '/einrichten',
   shifts: '/schichten',
   share: '/teilen',
+  invite: '/einladung',
 } as const
+
+export const WEITER_QUERY = 'weiter'
+export const INVITE_TOKEN_LENGTH = 64
+export const COPY_FEEDBACK_MS = 2000
 
 export const SESSION_STATE_KEY = 'session-user'
 export const SERVICE_WORKER_PATH = '/sw.js'
@@ -49,6 +54,10 @@ export const DB_ERROR = {
   shiftTypeMismatch: 'shift_type_mismatch',
   invalidColor: 'invalid_color',
   seriesEnd: 'series_end',
+  inviteMissing: 'invite_missing',
+  inviteRevoked: 'invite_revoked',
+  inviteUsed: 'invite_used',
+  inviteEmail: 'invite_email',
 } as const
 
 export const POSTGRES_ERROR = {

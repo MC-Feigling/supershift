@@ -1,12 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database'
-import type { Placement, PlacementDraft, PlanShare, ShiftType } from '~/types/plan'
-import { SHARE_STATUS } from '~/types/plan'
+import type { Placement, PlacementDraft, PlanShare, ShiftType, InviteLookup } from '~/types/plan'
+import { SHARE_CHANNEL, SHARE_STATUS } from '~/types/plan'
 import { TABLES } from './constants'
 import { AppError } from './errors'
 import type { PushKeys } from './push'
 
 type Client = SupabaseClient<Database>
+
+const SHARE_COLUMNS = 'id, owner_id, owner_email, grantee_email, grantee_id, status, can_write, invite_channel, invite_token, created_at, revoked_at'
 
 export async function fetchShiftTypes(client: Client, ownerId: string): Promise<ShiftType[]> {
   const { data, error } = await client
@@ -85,7 +87,7 @@ export async function deletePlacement(client: Client, placementId: string): Prom
 export async function fetchOutgoingShare(client: Client, ownerId: string): Promise<PlanShare | null> {
   const { data, error } = await client
     .from(TABLES.planShares)
-    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, can_write, created_at, revoked_at')
+    .select(SHARE_COLUMNS)
     .eq('owner_id', ownerId)
     .in('status', [SHARE_STATUS.pending, SHARE_STATUS.active])
     .maybeSingle()
@@ -98,7 +100,7 @@ export async function fetchOutgoingShare(client: Client, ownerId: string): Promi
 export async function fetchIncomingShares(client: Client, granteeId: string): Promise<PlanShare[]> {
   const { data, error } = await client
     .from(TABLES.planShares)
-    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, can_write, created_at, revoked_at')
+    .select(SHARE_COLUMNS)
     .eq('grantee_id', granteeId)
     .eq('status', SHARE_STATUS.active)
     .order('created_at', { ascending: false })
@@ -115,7 +117,28 @@ export async function insertShare(client: Client, ownerId: string, granteeEmail:
     owner_id: ownerId,
     grantee_email: granteeEmail,
     can_write: canWrite,
+    invite_channel: SHARE_CHANNEL.email,
   })
+  if (error) throw error
+}
+
+export async function insertLinkShare(client: Client, ownerId: string, canWrite: boolean): Promise<void> {
+  const { error } = await client.from(TABLES.planShares).insert({
+    owner_id: ownerId,
+    can_write: canWrite,
+    invite_channel: SHARE_CHANNEL.link,
+  })
+  if (error) throw error
+}
+
+export async function lookupInvite(client: Client, token: string): Promise<InviteLookup | null> {
+  const { data, error } = await client.rpc('lookup_plan_invite', { share_token: token })
+  if (error) throw error
+  return mapInviteLookup(data)
+}
+
+export async function claimInvite(client: Client, token: string): Promise<void> {
+  const { error } = await client.rpc('claim_plan_share', { share_token: token })
   if (error) throw error
 }
 
@@ -177,7 +200,7 @@ function mapPlacement(row: Database['public']['Tables']['placements']['Row']): P
 }
 
 function mapShare(row: Database['public']['Tables']['plan_shares']['Row']): PlanShare | null {
-  if (!isShareStatus(row.status)) return null
+  if (!isShareStatus(row.status) || !isShareChannel(row.invite_channel)) return null
   return {
     id: row.id,
     ownerId: row.owner_id,
@@ -186,9 +209,46 @@ function mapShare(row: Database['public']['Tables']['plan_shares']['Row']): Plan
     granteeId: row.grantee_id,
     status: row.status,
     canWrite: row.can_write,
+    inviteChannel: row.invite_channel,
+    inviteToken: row.invite_token,
     createdAt: row.created_at,
     revokedAt: row.revoked_at,
   }
+}
+
+function mapInviteLookup(value: unknown): InviteLookup | null {
+  const row = asJsonObject(value)
+  if (!row) return null
+  if (typeof row.owner_email !== 'string' || typeof row.status !== 'string') return null
+  if (!isShareStatus(row.status)) return null
+  if (typeof row.is_own !== 'boolean' || typeof row.grantee_is_self !== 'boolean' || typeof row.can_write !== 'boolean') {
+    return null
+  }
+  return {
+    ownerEmail: row.owner_email,
+    status: row.status,
+    isOwn: row.is_own,
+    granteeIsSelf: row.grantee_is_self,
+    canWrite: row.can_write,
+  }
+}
+
+function asJsonObject(value: unknown): Record<string, unknown> | null {
+  if (typeof value === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(value)
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, unknown>
+      return null
+    } catch {
+      return null
+    }
+  }
+  if (value && typeof value === 'object') return value as Record<string, unknown>
+  return null
+}
+
+function isShareChannel(value: string): value is PlanShare['inviteChannel'] {
+  return value === SHARE_CHANNEL.email || value === SHARE_CHANNEL.link
 }
 
 function isShareStatus(value: string): value is PlanShare['status'] {

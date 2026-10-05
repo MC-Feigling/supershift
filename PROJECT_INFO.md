@@ -8,7 +8,7 @@ Persönlicher Schichtplan. Eine angemeldete Person führt ihn und kann ihn mit g
 - Schichten als Name und Farbe aus der Palette
 - Monatskalender, Eintrag auf einen Tag, optionale Notiz, optionale wöchentliche Serie bis zu einem Datum
 - Push-Meldung an die andere Person, wenn etwas eingetragen oder entfernt wird
-- Freigabe per E-Mail, Lesen oder Lesen/Schreiben, Widerruf
+- Freigabe per E-Mail oder Link, Lesen oder Lesen/Schreiben, Widerruf
 - Oberfläche auf Deutsch
 
 ## Nicht im Umfang

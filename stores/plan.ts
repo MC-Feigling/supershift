@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { Placement, PlacementDraft, PlanShare, PlanView, SessionUser, ShiftType } from '~/types/plan'
+import type { InviteLookup, Placement, PlacementDraft, PlanShare, PlanView, SessionUser, ShiftType } from '~/types/plan'
 import { ROUTES, SESSION_STATE_KEY } from '~/utils/constants'
 import { AppError, isSessionExpired, toGermanError } from '~/utils/errors'
 import { queuePlanNotice } from '~/utils/plan-notice'
@@ -14,12 +14,16 @@ import {
   fetchPlacementsForOwners,
   fetchShiftTypes,
   fetchShiftTypesForOwners,
+  insertLinkShare,
   insertPlacement,
   insertShare,
   insertShiftType,
+  lookupInvite,
+  claimInvite,
   revokeShare,
   updateShiftType,
 } from '~/utils/plan-api'
+import { isInviteToken, normalizeInviteToken } from '~/utils/invite'
 import { isReadOnlyView } from '~/utils/share-access'
 import {
   normalizeEmail,
@@ -208,6 +212,32 @@ export const usePlanStore = defineStore('plan', () => {
     })
   }
 
+  async function createLinkShare(canWrite: boolean): Promise<void> {
+    if (outgoingShare.value) throw new AppError('Es gibt schon eine offene Freigabe. Zieh sie zuerst zurück.')
+    await mutate(async (client, currentUser) => {
+      await insertLinkShare(client, currentUser.id, canWrite)
+    })
+  }
+
+  async function lookupShareInvite(token: string): Promise<InviteLookup | null> {
+    if (!isInviteToken(token)) return null
+    const client = requireClient()
+    try {
+      return await lookupInvite(client, normalizeInviteToken(token))
+    } catch (error) {
+      await handleExpired(error)
+      throw new AppError(toGermanError(error))
+    }
+  }
+
+  async function acceptInvite(token: string): Promise<void> {
+    if (!isInviteToken(token)) throw new AppError('Dieser Link gilt nicht.')
+    await mutate(async (client) => {
+      await claimInvite(client, normalizeInviteToken(token))
+    })
+    showSharedPlan()
+  }
+
   async function revoke(): Promise<void> {
     const share = outgoingShare.value
     if (!share) throw new AppError('Es gibt keine offene Freigabe.')
@@ -322,6 +352,9 @@ export const usePlanStore = defineStore('plan', () => {
     createPlacement,
     removePlacement,
     invite,
+    createLinkShare,
+    lookupShareInvite,
+    acceptInvite,
     revoke,
     showOwnPlan,
     showSharedPlan,

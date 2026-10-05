@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SHARE_STATUS, type PlanShare } from '~/types/plan'
+import { SHARE_CHANNEL, SHARE_STATUS, type PlanShare } from '~/types/plan'
 import { isReadOnlyView, noticeRecipientId } from '~/utils/share-access'
 
 function share(overrides: Partial<PlanShare> = {}): PlanShare {
@@ -11,6 +11,8 @@ function share(overrides: Partial<PlanShare> = {}): PlanShare {
     granteeId: 'grantee-id',
     status: SHARE_STATUS.active,
     canWrite: false,
+    inviteChannel: SHARE_CHANNEL.email,
+    inviteToken: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     revokedAt: null,
     ...overrides,
