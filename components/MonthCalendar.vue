@@ -5,16 +5,23 @@ import { WEEKDAY_LABELS } from '~/utils/constants'
 defineProps<{
   monthLabel: string
   cells: CalendarCell[]
+  canQuickPick: boolean
 }>()
 
 const emit = defineEmits<{
   select: [iso: string]
+  quick: [iso: string]
   previous: []
   next: []
   today: []
 }>()
 
 const weekdayLabels = WEEKDAY_LABELS
+
+const press = usePressHold<string>({
+  onTap: (iso: string) => emit('select', iso),
+  onHold: (iso: string) => emit('quick', iso),
+})
 </script>
 
 <template>
@@ -27,6 +34,7 @@ const weekdayLabels = WEEKDAY_LABELS
         <AppButton variant="secondary" @click="emit('next')">Weiter</AppButton>
       </div>
     </div>
+    <p v-if="canQuickPick" class="label-meta mb-3 px-1">Gedrückt halten setzt eine Schicht direkt.</p>
     <div class="overflow-hidden rounded-sm border border-ink/20">
     <div class="grid grid-cols-7 border-b border-ink/20 text-center">
       <span v-for="label in weekdayLabels" :key="label" class="label-meta border-r border-ink/20 py-2 last:border-r-0">{{ label }}</span>
@@ -38,13 +46,20 @@ const weekdayLabels = WEEKDAY_LABELS
         type="button"
         :aria-label="cell.label"
         :aria-pressed="cell.isSelected"
-        class="flex min-h-24 flex-col border-b border-r border-ink/20 px-1.5 py-1.5 text-left transition sm:min-h-32 sm:px-2 [&:nth-child(7n)]:border-r-0"
+        :aria-haspopup="canQuickPick ? 'dialog' : undefined"
+        class="calendar-day flex min-h-24 flex-col border-b border-r border-ink/20 px-1.5 py-1.5 text-left transition sm:min-h-32 sm:px-2 [&:nth-child(7n)]:border-r-0"
         :class="[
           cell.isWeekend ? 'bg-sand' : 'bg-card',
           cell.inMonth ? '' : 'opacity-40',
           cell.isSelected ? 'ring-2 ring-inset ring-spruce' : 'hover:bg-sand',
         ]"
-        @click="emit('select', cell.iso)"
+        @pointerdown="press.onPointerDown(cell.iso, $event)"
+        @pointermove="press.onPointerMove($event)"
+        @pointerup="press.onPointerUp($event)"
+        @pointercancel="press.onPointerCancel()"
+        @lostpointercapture="press.onPointerCancel()"
+        @click="press.onClick(cell.iso, $event)"
+        @contextmenu="press.onContextMenu(cell.iso, $event)"
       >
         <span
           class="mb-1 inline-flex h-6 w-6 items-center justify-center font-mono text-xs font-medium"
