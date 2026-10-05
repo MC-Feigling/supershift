@@ -17,9 +17,12 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Persönlicher Schichtplan, teilbar mit einer Person.' },
         { name: 'robots', content: 'noindex' },
         { name: 'theme-color', content: '#141618' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'preconnect', href: 'https://fonts.bunny.net' },
         {
           rel: 'stylesheet',
@@ -29,15 +32,24 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    vapidPrivateKey: '',
+    vapidSubject: 'mailto:schichtwerk@localhost',
     public: {
       supabaseUrl: '',
       supabasePublishableKey: '',
+      vapidPublicKey: '',
     },
   },
   typescript: {
     strict: true,
   },
   routeRules: {
+    '/sw.js': {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Service-Worker-Allowed': '/',
+      },
+    },
     '/**': {
       headers: {
         'X-Frame-Options': 'DENY',

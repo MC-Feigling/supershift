@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import type { Placement, PlacementDraft, PlanShare, PlanView, SessionUser, ShiftType } from '~/types/plan'
 import { ROUTES, SESSION_STATE_KEY } from '~/utils/constants'
 import { AppError, isSessionExpired, toGermanError } from '~/utils/errors'
+import { queuePlanNotice } from '~/utils/plan-notice'
+import { PLAN_NOTICE_KIND } from '~/utils/push'
 import {
   deletePlacement,
   deleteShiftType,
@@ -153,13 +155,36 @@ export const usePlanStore = defineStore('plan', () => {
     await mutate(async (client, user) => {
       await insertPlacement(client, user.id, cleaned)
     })
+    const shiftName = shiftTypes.value.find((shiftType: ShiftType) => shiftType.id === cleaned.shiftTypeId)?.name
+    if (shiftName) {
+      queuePlanNotice({
+        kind: PLAN_NOTICE_KIND.created,
+        shiftName,
+        startsOn: cleaned.startsOn,
+        repeatsWeekly: cleaned.repeatsWeekly,
+        endsOn: cleaned.endsOn,
+      })
+    }
   }
 
   async function removePlacement(placementId: string): Promise<void> {
     assertOwnPlan()
+    const placement = placements.value.find((entry: Placement) => entry.id === placementId)
+    const shiftName = placement
+      ? shiftTypes.value.find((shiftType: ShiftType) => shiftType.id === placement.shiftTypeId)?.name
+      : undefined
     await mutate(async (client) => {
       await deletePlacement(client, placementId)
     })
+    if (placement && shiftName) {
+      queuePlanNotice({
+        kind: PLAN_NOTICE_KIND.removed,
+        shiftName,
+        startsOn: placement.startsOn,
+        repeatsWeekly: placement.repeatsWeekly,
+        endsOn: placement.endsOn,
+      })
+    }
   }
 
   async function invite(email: string): Promise<void> {

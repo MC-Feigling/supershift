@@ -26,7 +26,7 @@ const shareBody = computed(() => {
   if (share.status === SHARE_STATUS.pending) {
     return `${share.granteeEmail} hat noch kein Konto. Sobald die Person sich mit dieser E-Mail registriert, kann sie den Plan lesen.`
   }
-  return `${share.granteeEmail} kann den Plan lesen, nichts ändern. Eine E-Mail wird nicht verschickt.`
+  return `${share.granteeEmail} kann den Plan lesen, nichts ändern. Bei Eintrag oder Entfernen bekommt sie eine Push-Meldung, wenn sie das eingeschaltet hat.`
 })
 const hasIncoming = computed(() => plan.incomingShares.length > 0)
 const revokeLabel = computed(() => plan.isSaving ? 'Wird zurückgezogen…' : 'Zugriff entziehen')
@@ -118,6 +118,8 @@ async function retry(): Promise<void> {
         </div>
       </form>
 
+      <PushOptIn />
+
       <article v-if="hasIncoming" class="panel">
         <h2 class="display-title text-2xl">Mit dir geteilt</h2>
         <ul class="mt-3 space-y-2">
@@ -125,7 +127,7 @@ async function retry(): Promise<void> {
             {{ share.ownerEmail }}
           </li>
         </ul>
-        <p class="mt-3 text-sm text-muted">Im Kalender wechselst du auf den geteilten Plan. Dort kannst du nur lesen und drucken.</p>
+        <p class="mt-3 text-sm text-muted">Im Kalender wechselst du auf den geteilten Plan. Dort kannst du nur lesen.</p>
       </article>
     </div>
   </section>

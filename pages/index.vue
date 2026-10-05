@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import type { PlacementDraft, ShiftOption, ShiftType } from '~/types/plan'
 import { toGermanError } from '~/utils/errors'
-import { printHref } from '~/utils/print-href'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Kalender' })
 
 const plan = await useLoadedPlan()
+const { status: pushStatus, enable: enablePush } = usePush()
 const {
   selectedIso,
-  anchorIso,
   monthLabel,
   selectedLabel,
   cells,
@@ -39,8 +38,7 @@ const ownVariant = computed(() => ownPressed.value ? 'primary' : 'secondary')
 const sharedVariant = computed(() => sharedPressed.value ? 'primary' : 'secondary')
 const showIncomingPicker = computed(() => plan.view === 'shared' && plan.incomingShares.length > 1)
 const selectedOwnerValue = computed(() => plan.selectedIncomingOwnerId ?? '')
-const weekHref = computed(() => printHref('week', selectedIso.value, plan.readOnly, plan.activeIncoming?.ownerId ?? null))
-const monthHref = computed(() => printHref('month', anchorIso.value, plan.readOnly, plan.activeIncoming?.ownerId ?? null))
+const showPushHint = computed(() => plan.incomingShares.length > 0 && pushStatus.value === 'off')
 
 function selectDay(iso: string): void {
   actionError.value = ''
@@ -78,36 +76,36 @@ async function retry(): Promise<void> {
 
 <template>
   <div>
-    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-wrap items-center gap-2">
-        <AppButton v-if="showSharedSwitch" :variant="ownVariant" :aria-pressed="ownPressed" @click="plan.showOwnPlan()">
-          Mein Plan
-        </AppButton>
-        <AppButton v-if="showSharedSwitch" :variant="sharedVariant" :aria-pressed="sharedPressed" @click="plan.showSharedPlan()">
-          {{ sharedButtonLabel }}
-        </AppButton>
-        <label v-if="showIncomingPicker" class="text-sm font-semibold text-muted">
-          <span class="sr-only">Geteilter Plan</span>
-          <select
-            :value="selectedOwnerValue"
-            class="rounded-sm border border-line bg-card px-3 py-2"
-            @change="onOwnerChange"
-          >
-            <option v-for="share in plan.incomingShares" :key="share.id" :value="share.ownerId">
-              {{ share.ownerEmail }}
-            </option>
-          </select>
-        </label>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <NuxtLink :to="weekHref" class="inline-flex items-center rounded-sm bg-card px-4 py-2.5 font-mono text-[11px] font-medium uppercase tracking-stencil ring-1 ring-line hover:bg-sand">
-          Woche drucken
-        </NuxtLink>
-        <NuxtLink :to="monthHref" class="inline-flex items-center rounded-sm bg-card px-4 py-2.5 font-mono text-[11px] font-medium uppercase tracking-stencil ring-1 ring-line hover:bg-sand">
-          Monat drucken
-        </NuxtLink>
-      </div>
+    <div v-if="showSharedSwitch" class="mb-5 flex flex-wrap items-center gap-2">
+      <AppButton :variant="ownVariant" :aria-pressed="ownPressed" @click="plan.showOwnPlan()">
+        Mein Plan
+      </AppButton>
+      <AppButton :variant="sharedVariant" :aria-pressed="sharedPressed" @click="plan.showSharedPlan()">
+        {{ sharedButtonLabel }}
+      </AppButton>
+      <label v-if="showIncomingPicker" class="text-sm font-semibold text-muted">
+        <span class="sr-only">Geteilter Plan</span>
+        <select
+          :value="selectedOwnerValue"
+          class="rounded-sm border border-line bg-card px-3 py-2"
+          @change="onOwnerChange"
+        >
+          <option v-for="share in plan.incomingShares" :key="share.id" :value="share.ownerId">
+            {{ share.ownerEmail }}
+          </option>
+        </select>
+      </label>
     </div>
+
+    <StatusNote
+      v-if="showPushHint"
+      class="mb-5"
+      tone="info"
+      title="Meldungen für den geteilten Plan"
+      body="Wenn jemand etwas einträgt oder entfernt, kann dieses Gerät Bescheid sagen."
+    >
+      <AppButton @click="enablePush">Einschalten</AppButton>
+    </StatusNote>
 
     <StatusNote
       v-if="showInitialLoading"

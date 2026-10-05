@@ -19,32 +19,16 @@ export const ROUTES = {
   setup: '/einrichten',
   shifts: '/schichten',
   share: '/teilen',
-  printWeek: '/druck/woche',
-  printMonth: '/druck/monat',
-} as const
-
-export const PLAN_QUERY = {
-  date: 'datum',
-  plan: 'plan',
-  owner: 'von',
-} as const
-
-export const PLAN_SOURCE = {
-  own: 'eigen',
-  shared: 'geteilt',
-} as const
-
-export const PRINT_VIEW = {
-  week: 'woche',
-  month: 'monat',
 } as const
 
 export const SESSION_STATE_KEY = 'session-user'
+export const SERVICE_WORKER_PATH = '/sw.js'
 
 export const TABLES = {
   shiftTypes: 'shift_types',
   placements: 'placements',
   planShares: 'plan_shares',
+  pushSubscriptions: 'push_subscriptions',
 } as const
 
 export const CONSTRAINTS = {

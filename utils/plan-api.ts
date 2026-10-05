@@ -4,6 +4,7 @@ import type { Placement, PlacementDraft, PlanShare, ShiftType } from '~/types/pl
 import { SHARE_STATUS } from '~/types/plan'
 import { TABLES } from './constants'
 import { AppError } from './errors'
+import type { PushKeys } from './push'
 
 type Client = SupabaseClient<Database>
 
@@ -123,6 +124,31 @@ export async function revokeShare(client: Client, shareId: string): Promise<void
     .update({ status: SHARE_STATUS.revoked })
     .eq('id', shareId)
 
+  if (error) throw error
+}
+
+export async function savePushSubscription(client: Client, userId: string, keys: PushKeys): Promise<void> {
+  const { error: deleteError } = await client
+    .from(TABLES.pushSubscriptions)
+    .delete()
+    .eq('user_id', userId)
+    .eq('endpoint', keys.endpoint)
+  if (deleteError) throw deleteError
+  const { error } = await client.from(TABLES.pushSubscriptions).insert({
+    user_id: userId,
+    endpoint: keys.endpoint,
+    p256dh: keys.p256dh,
+    auth: keys.auth,
+  })
+  if (error) throw error
+}
+
+export async function deletePushSubscription(client: Client, userId: string, endpoint: string): Promise<void> {
+  const { error } = await client
+    .from(TABLES.pushSubscriptions)
+    .delete()
+    .eq('user_id', userId)
+    .eq('endpoint', endpoint)
   if (error) throw error
 }
 

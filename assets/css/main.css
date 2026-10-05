@@ -46,31 +46,3 @@
     inset 0 1px 0 rgba(235, 230, 220, 0.06),
     0 18px 40px -28px rgba(0, 0, 0, 0.8);
 }
-
-@page {
-  size: A4;
-  margin: 12mm;
-}
-
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  html {
-    color-scheme: light;
-  }
-
-  html,
-  body {
-    background: #f3eee4 !important;
-    color: #1a1b1d !important;
-    background-image: none !important;
-  }
-
-  * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    box-shadow: none !important;
-  }
-}

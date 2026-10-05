@@ -15,7 +15,7 @@
           Dein Plan.<br>Eine Person dazu.
         </p>
         <p class="mt-5 max-w-sm text-lg leading-8 text-muted">
-          Schichten sind Namen. Du setzt sie auf Tage, auch jede Woche bis zu einem Datum, und druckst Woche oder Monat.
+          Schichten sind Namen. Du setzt sie auf Tage, auch jede Woche bis zu einem Datum. Die andere Person liest mit und kann sich benachrichtigen lassen.
         </p>
       </div>
       <p class="relative font-mono text-xs uppercase tracking-stencil text-muted">Nur du änderst den Plan. Die andere Person liest mit.</p>
