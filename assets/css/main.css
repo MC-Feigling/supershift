@@ -62,8 +62,26 @@
   background: rgb(8 9 10 / 72%);
 }
 
-.calendar-day {
+.calendar-day,
+.calendar-day * {
   -webkit-touch-callout: none;
+  -webkit-user-select: none;
   user-select: none;
-  touch-action: manipulation;
+  -webkit-user-drag: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calendar-day {
+  touch-action: none;
+}
+
+.calendar-day * {
+  pointer-events: none;
+}
+
+html.press-hold-lock,
+html.press-hold-lock * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
