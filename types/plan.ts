@@ -76,6 +76,7 @@ export interface CalendarCell {
 
 export interface DayEntry {
   placementId: string
+  shiftTypeId: string
   name: string
   background: string
   color: string

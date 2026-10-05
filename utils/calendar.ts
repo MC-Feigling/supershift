@@ -44,6 +44,7 @@ export function entriesForDay(
     const color = shiftColor(name)
     entries.push({
       placementId: placement.id,
+      shiftTypeId: placement.shiftTypeId,
       name,
       background: color.background,
       color: color.color,

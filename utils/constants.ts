@@ -24,6 +24,9 @@ export const ROUTES = {
 export const SESSION_STATE_KEY = 'session-user'
 export const SERVICE_WORKER_PATH = '/sw.js'
 export const DAY_PANEL_TITLE_ID = 'day-panel-title'
+export const SHIFT_QUICK_PICK_TITLE_ID = 'shift-quick-pick-title'
+export const LONG_PRESS_MS = 500
+export const LONG_PRESS_MOVE_PX = 12
 
 export const TABLES = {
   shiftTypes: 'shift_types',
