@@ -23,8 +23,12 @@ revoke all on function private.shift_color_index(text) from public;
 alter table public.shift_types
   add column color_index smallint not null default 0;
 
+alter table public.shift_types disable trigger shift_types_guard;
+
 update public.shift_types
 set color_index = private.shift_color_index(name);
+
+alter table public.shift_types enable trigger shift_types_guard;
 
 alter table public.shift_types
   add constraint shift_types_color_index_range check (color_index between 0 and 7);
