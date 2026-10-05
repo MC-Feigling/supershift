@@ -110,10 +110,11 @@ async function retry(): Promise<void> {
             <li
               v-for="entry in column.entries"
               :key="entry.placementId"
-              class="rounded-sm px-2 py-1 text-sm font-semibold"
+              class="rounded-sm px-2 py-1 text-sm"
               :style="{ backgroundColor: entry.background, color: entry.color }"
             >
-              {{ entry.name }}
+              <p class="font-semibold">{{ entry.name }}</p>
+              <p v-if="entry.note" class="mt-0.5 text-xs leading-4 font-normal opacity-90">{{ entry.note }}</p>
             </li>
           </ul>
         </section>

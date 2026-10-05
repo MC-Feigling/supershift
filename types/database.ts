@@ -27,6 +27,7 @@ export interface Database {
           starts_on: string
           ends_on: string | null
           repeats_weekly: boolean
+          note: string
           created_at: string
         }
         Insert: {
@@ -36,12 +37,14 @@ export interface Database {
           starts_on: string
           ends_on?: string | null
           repeats_weekly?: boolean
+          note?: string
           created_at?: string
         }
         Update: {
           starts_on?: string
           ends_on?: string | null
           repeats_weekly?: boolean
+          note?: string
         }
         Relationships: []
       }

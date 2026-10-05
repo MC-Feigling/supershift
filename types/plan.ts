@@ -27,6 +27,7 @@ export interface Placement {
   startsOn: string
   endsOn: string | null
   repeatsWeekly: boolean
+  note: string
   createdAt: string
 }
 
@@ -46,6 +47,7 @@ export interface PlacementDraft {
   startsOn: string
   repeatsWeekly: boolean
   endsOn: string | null
+  note: string
 }
 
 export interface ShiftColor {
@@ -78,6 +80,7 @@ export interface DayEntry {
   background: string
   color: string
   detail: string
+  note: string
   removeLabel: string
 }
 

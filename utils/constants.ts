@@ -1,5 +1,6 @@
 export const SHIFT_NAME_MIN_LENGTH = 1
 export const SHIFT_NAME_MAX_LENGTH = 40
+export const NOTE_MAX_LENGTH = 200
 export const MIN_PASSWORD_LENGTH = 8
 export const EMAIL_MAX_LENGTH = 254
 export const MIN_SUPABASE_KEY_LENGTH = 20
@@ -49,6 +50,7 @@ export const TABLES = {
 export const CONSTRAINTS = {
   shiftName: 'shift_types_owner_name_lower_idx',
   oneShare: 'plan_shares_one_open_idx',
+  placementNote: 'placements_note_len',
 } as const
 
 export const DB_ERROR = {

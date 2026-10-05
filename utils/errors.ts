@@ -1,5 +1,5 @@
 import { AuthError, type PostgrestError } from '@supabase/supabase-js'
-import { CONSTRAINTS, DB_ERROR, POSTGRES_ERROR, POSTGREST_ERROR } from './constants'
+import { CONSTRAINTS, DB_ERROR, NOTE_MAX_LENGTH, POSTGRES_ERROR, POSTGREST_ERROR } from './constants'
 
 export class AppError extends Error {
   constructor(message: string) {
@@ -32,6 +32,9 @@ function mapPostgrestError(error: PostgrestError): string {
   if (error.message.includes(DB_ERROR.onlyRevoke)) return 'Eine Freigabe kann nur zurückgezogen werden.'
   if (error.message.includes(DB_ERROR.shiftTypeMismatch)) return 'Die Schicht gehört nicht zu diesem Plan.'
   if (error.message.includes(DB_ERROR.seriesEnd)) return 'Das Enddatum der Serie ist ungültig.'
+  if (error.message.includes(CONSTRAINTS.placementNote)) {
+    return `Die Notiz ist zu lang. Höchstens ${NOTE_MAX_LENGTH} Zeichen.`
+  }
   if (error.code === POSTGRES_ERROR.uniqueViolation) {
     if (error.message.includes(CONSTRAINTS.shiftName)) return 'Diesen Namen gibt es schon.'
     if (error.message.includes(CONSTRAINTS.oneShare)) {

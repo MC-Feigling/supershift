@@ -6,7 +6,7 @@ Persönlicher Schichtplan. Eine angemeldete Person führt ihn und kann ihn mit g
 
 - Anmeldung mit E-Mail und Passwort
 - Schichten nur als Name
-- Monatskalender, Eintrag auf einen Tag, optionale wöchentliche Serie bis zu einem Datum
+- Monatskalender, Eintrag auf einen Tag, optionale Notiz, optionale wöchentliche Serie bis zu einem Datum
 - Druck von Woche und Monat
 - Freigabe per E-Mail, nur lesen, Widerruf
 - Oberfläche auf Deutsch

@@ -46,7 +46,7 @@ export async function deleteShiftType(client: Client, shiftTypeId: string): Prom
 export async function fetchPlacements(client: Client, ownerId: string): Promise<Placement[]> {
   const { data, error } = await client
     .from(TABLES.placements)
-    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, created_at')
+    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, note, created_at')
     .eq('owner_id', ownerId)
 
   if (error) throw error
@@ -57,7 +57,7 @@ export async function fetchPlacementsForOwners(client: Client, ownerIds: readonl
   if (ownerIds.length === 0) return []
   const { data, error } = await client
     .from(TABLES.placements)
-    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, created_at')
+    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, note, created_at')
     .in('owner_id', [...ownerIds])
 
   if (error) throw error
@@ -71,6 +71,7 @@ export async function insertPlacement(client: Client, ownerId: string, draft: Pl
     starts_on: draft.startsOn,
     ends_on: draft.repeatsWeekly ? draft.endsOn : null,
     repeats_weekly: draft.repeatsWeekly,
+    note: draft.note,
   })
   if (error) throw error
 }
@@ -142,6 +143,7 @@ function mapPlacement(row: Database['public']['Tables']['placements']['Row']): P
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     repeatsWeekly: row.repeats_weekly,
+    note: row.note,
     createdAt: row.created_at,
   }
 }

@@ -20,6 +20,7 @@ import {
 } from '~/utils/plan-api'
 import {
   normalizeEmail,
+  normalizeNote,
   normalizeShiftName,
   placementsConflict,
   validatePlacement,
@@ -139,14 +140,18 @@ export const usePlanStore = defineStore('plan', () => {
 
   async function createPlacement(draft: PlacementDraft): Promise<void> {
     assertOwnPlan()
+    const cleaned: PlacementDraft = {
+      ...draft,
+      note: normalizeNote(draft.note),
+    }
     const knownIds = shiftTypes.value.map((shiftType: ShiftType) => shiftType.id)
-    const draftError = validatePlacement(draft, knownIds)
+    const draftError = validatePlacement(cleaned, knownIds)
     if (draftError) throw new AppError(draftError)
-    if (placementsConflict(placements.value, draft)) {
+    if (placementsConflict(placements.value, cleaned)) {
       throw new AppError('Diese Schicht liegt an einem dieser Tage schon.')
     }
     await mutate(async (client, user) => {
-      await insertPlacement(client, user.id, draft)
+      await insertPlacement(client, user.id, cleaned)
     })
   }
 
