@@ -1,6 +1,7 @@
 import type { SessionUser } from '~/types/plan'
-import { ROUTES, SESSION_STATE_KEY } from '~/utils/constants'
+import { ROUTES, SESSION_STATE_KEY, WEITER_QUERY } from '~/utils/constants'
 import { AppError, toGermanError } from '~/utils/errors'
+import { readInviteRedirect } from '~/utils/invite'
 import { normalizeEmail, validateCredentials } from '~/utils/validation'
 
 export interface AuthResult {
@@ -10,6 +11,7 @@ export interface AuthResult {
 export function useSession() {
   const user = useState<SessionUser | null>(SESSION_STATE_KEY, () => null)
   const requestUrl = useRequestURL()
+  const route = useRoute()
 
   async function signIn(email: string, password: string): Promise<void> {
     const errors = validateCredentials(email, password)
@@ -22,23 +24,27 @@ export function useSession() {
     if (error) throw new AppError(toGermanError(error))
     if (!data.user) throw new AppError('Die Anmeldung ist fehlgeschlagen. Versuch es noch einmal.')
     user.value = { id: data.user.id, email: data.user.email ?? normalizeEmail(email) }
-    await navigateTo(ROUTES.home)
+    await goAfterAuth()
   }
 
   async function signUp(email: string, password: string): Promise<AuthResult> {
     const errors = validateCredentials(email, password)
     if (errors.email || errors.password) throw new AppError(errors.email ?? errors.password ?? 'Eingabe prüfen.')
     const supabase = requireSupabase()
+    const next = readInviteRedirect(route.query[WEITER_QUERY])
+    const confirmPath = next
+      ? `${ROUTES.signIn}?${WEITER_QUERY}=${encodeURIComponent(next)}`
+      : ROUTES.signIn
     const { data, error } = await supabase.auth.signUp({
       email: normalizeEmail(email),
       password,
-      options: { emailRedirectTo: `${requestUrl.origin}${ROUTES.signIn}` },
+      options: { emailRedirectTo: `${requestUrl.origin}${confirmPath}` },
     })
     if (error) throw new AppError(toGermanError(error))
     if (!data.user) throw new AppError('Das Konto konnte nicht angelegt werden.')
     if (!data.session) return { needsConfirmation: true }
     user.value = { id: data.user.id, email: data.user.email ?? normalizeEmail(email) }
-    await navigateTo(ROUTES.home)
+    await goAfterAuth()
     return { needsConfirmation: false }
   }
 
@@ -50,6 +56,11 @@ export function useSession() {
     }
     user.value = null
     await navigateTo(ROUTES.signIn)
+  }
+
+  async function goAfterAuth(): Promise<void> {
+    const next = readInviteRedirect(route.query[WEITER_QUERY])
+    await navigateTo(next ?? ROUTES.home)
   }
 
   return { user, signIn, signUp, signOut }

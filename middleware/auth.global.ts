@@ -1,6 +1,6 @@
-import { PUBLIC_PATHS, ROUTES } from '~/utils/constants'
+import { PUBLIC_PATHS, ROUTES, SESSION_STATE_KEY, WEITER_QUERY } from '~/utils/constants'
 import { isSupabaseConfigured } from '~/utils/env'
-import { SESSION_STATE_KEY } from '~/utils/constants'
+import { isInviteRoute, readInviteRedirect } from '~/utils/invite'
 import type { SessionUser } from '~/types/plan'
 
 export default defineNuxtRouteMiddleware((to) => {
@@ -15,7 +15,10 @@ export default defineNuxtRouteMiddleware((to) => {
 
   if (to.path === ROUTES.setup) return navigateTo(ROUTES.home)
 
-  const isPublic = PUBLIC_PATHS.includes(to.path as (typeof PUBLIC_PATHS)[number])
+  const isPublic = (PUBLIC_PATHS as readonly string[]).includes(to.path) || isInviteRoute(to.path)
   if (!user.value && !isPublic) return navigateTo(ROUTES.signIn)
-  if (user.value && (to.path === ROUTES.signIn || to.path === ROUTES.signUp)) return navigateTo(ROUTES.home)
+  if (user.value && (to.path === ROUTES.signIn || to.path === ROUTES.signUp)) {
+    const next = readInviteRedirect(to.query[WEITER_QUERY])
+    return navigateTo(next ?? ROUTES.home)
+  }
 })

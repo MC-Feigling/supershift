@@ -56,10 +56,12 @@ export interface Database {
           id: string
           owner_id: string
           owner_email: string
-          grantee_email: string
+          grantee_email: string | null
           grantee_id: string | null
           status: string
           can_write: boolean
+          invite_channel: string
+          invite_token: string | null
           created_at: string
           revoked_at: string | null
         }
@@ -67,16 +69,20 @@ export interface Database {
           id?: string
           owner_id: string
           owner_email?: string
-          grantee_email: string
+          grantee_email?: string | null
           grantee_id?: string | null
           status?: string
           can_write?: boolean
+          invite_channel?: string
+          invite_token?: string | null
           created_at?: string
           revoked_at?: string | null
         }
         Update: {
           status?: string
           revoked_at?: string | null
+          grantee_id?: string | null
+          grantee_email?: string | null
         }
         Relationships: []
       }
@@ -106,6 +112,24 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      lookup_plan_invite: {
+        Args: { share_token: string }
+        Returns: {
+          owner_email: string
+          status: string
+          is_own: boolean
+          grantee_is_self: boolean
+          can_write: boolean
+        } | null
+      }
+      claim_plan_share: {
+        Args: { share_token: string }
+        Returns: {
+          owner_id: string
+          owner_email: string
+        } | null
+      }
+    }
   }
 }

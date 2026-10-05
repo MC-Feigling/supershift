@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { SHARE_STATUS } from '~/types/plan'
+import { SHARE_CHANNEL, SHARE_STATUS } from '~/types/plan'
 import { toGermanError } from '~/utils/errors'
+import { invitePath } from '~/utils/invite'
 import { shareAccessLabel } from '~/utils/share-access'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Teilen' })
 
 const plan = await useLoadedPlan()
+const requestUrl = useRequestURL()
 const email = ref('')
 const canWrite = ref(false)
 const formError = ref('')
@@ -17,15 +19,22 @@ const showBlockingError = computed(() => plan.status === 'error' && !plan.hasLoa
 const blockingBody = computed(() => plan.errorMessage ?? '')
 const openShare = computed(() => plan.outgoingShare)
 const hasOpenShare = computed(() => openShare.value !== null)
+const accessLabel = computed(() => shareAccessLabel(openShare.value?.canWrite ?? false))
 const shareTitle = computed(() => {
-  if (openShare.value?.status === SHARE_STATUS.pending) return 'Einladung offen'
-  if (openShare.value?.status === SHARE_STATUS.active) return 'Plan ist geteilt'
+  const share = openShare.value
+  if (!share) return ''
+  if (share.status === SHARE_STATUS.pending && share.inviteChannel === SHARE_CHANNEL.link) return 'Link ist bereit'
+  if (share.status === SHARE_STATUS.pending) return 'Einladung offen'
+  if (share.status === SHARE_STATUS.active) return 'Plan ist geteilt'
   return ''
 })
 const shareBody = computed(() => {
   const share = openShare.value
   if (!share) return ''
-  const access = shareAccessLabel(share.canWrite)
+  const access = accessLabel.value
+  if (share.inviteChannel === SHARE_CHANNEL.link && share.status === SHARE_STATUS.pending) {
+    return `Noch niemand hat den Link geöffnet. Wer ihn öffnet und angemeldet ist, kann den Plan ${access}.`
+  }
   if (share.status === SHARE_STATUS.pending) {
     return `${share.granteeEmail} hat noch kein Konto. Sobald die Person sich mit dieser E-Mail registriert, kann sie den Plan ${access}.`
   }
@@ -34,6 +43,20 @@ const shareBody = computed(() => {
   }
   return `${share.granteeEmail} kann den Plan ${access}, nichts ändern. Bei Eintrag oder Entfernen bekommt sie eine Push-Meldung, wenn sie das eingeschaltet hat.`
 })
+const shareUrl = computed(() => {
+  const token = openShare.value?.inviteToken
+  if (!token) return ''
+  return `${requestUrl.origin}${invitePath(token)}`
+})
+const showShareLink = computed(() => {
+  const share = openShare.value
+  return Boolean(
+    share
+    && share.inviteChannel === SHARE_CHANNEL.link
+    && share.status === SHARE_STATUS.pending
+    && share.inviteToken,
+  )
+})
 const hasIncoming = computed(() => plan.incomingShares.length > 0)
 const incomingRows = computed(() => plan.incomingShares.map((share) => ({
   id: share.id,
@@ -41,6 +64,8 @@ const incomingRows = computed(() => plan.incomingShares.map((share) => ({
   access: shareAccessLabel(share.canWrite),
 })))
 const revokeLabel = computed(() => plan.isSaving ? 'Wird zurückgezogen…' : 'Zugriff entziehen')
+const inviteLabel = computed(() => plan.isSaving ? 'Wird eingeladen…' : 'Per E-Mail einladen')
+const linkLabel = computed(() => plan.isSaving ? 'Wird erzeugt…' : 'Link erzeugen')
 const incomingHint = computed(() => {
   const shares = plan.incomingShares
   if (shares.length === 1 && shares[0]?.canWrite) {
@@ -71,6 +96,16 @@ async function invite(): Promise<void> {
   }
 }
 
+async function createLink(): Promise<void> {
+  formError.value = ''
+  try {
+    await plan.createLinkShare(canWrite.value)
+    canWrite.value = false
+  } catch (error) {
+    formError.value = toGermanError(error)
+  }
+}
+
 function askRevoke(): void {
   confirmingRevoke.value = true
 }
@@ -95,10 +130,10 @@ async function retry(): Promise<void> {
 </script>
 
 <template>
-  <section class="mx-auto max-w-xl">
+  <section class="mx-auto max-w-3xl">
     <h1 class="display-title text-4xl">Teilen</h1>
     <p class="mt-2 text-base leading-7 text-muted">
-      Eine Person. Du wählst, ob sie nur liest oder auch einträgt. Es gibt keine Gruppe und keine weitere Freigabe.
+      Eine Person, per E-Mail oder per Link. Du wählst, ob sie nur liest oder auch einträgt. Es gibt keine Gruppe und keine weitere Freigabe.
     </p>
 
     <StatusNote v-if="showInitialLoading" class="mt-6" tone="info" title="Freigabe wird geladen" body="Einen Moment." />
@@ -110,6 +145,8 @@ async function retry(): Promise<void> {
       <article v-if="hasOpenShare" class="panel">
         <h2 class="display-title text-2xl">{{ shareTitle }}</h2>
         <p class="mt-2 text-sm leading-6 text-muted">{{ shareBody }}</p>
+        <ShareLinkCopy v-if="showShareLink" class="mt-4" :url="shareUrl" :disabled="plan.isSaving" />
+        <p v-if="formError" class="mt-3 text-sm text-clay" role="alert">{{ formError }}</p>
         <div v-if="confirmingRevoke" class="mt-4">
           <p class="text-sm font-semibold">Zugriff wirklich entziehen?</p>
           <div class="mt-3 flex gap-2">
@@ -122,30 +159,46 @@ async function retry(): Promise<void> {
         </div>
       </article>
 
-      <form v-else class="panel" @submit.prevent="invite">
-        <h2 class="display-title text-2xl">Mit einer Person teilen</h2>
-        <p class="mt-2 text-sm leading-6 text-muted">
-          Hat die Person schon ein Konto, sieht sie den Plan beim nächsten Öffnen. Sonst bleibt die Einladung offen, bis sie sich registriert.
-        </p>
-        <div class="mt-4">
-          <TextField
-            id="share-email"
-            label="E-Mail der Person"
-            type="email"
-            autocomplete="email"
-            :model-value="email"
-            :disabled="plan.isSaving"
-            @update:model-value="onEmail"
-          />
-        </div>
-        <div class="mt-4">
+      <div v-else class="space-y-4">
+        <div class="panel">
           <ShareAccessField :model-value="canWrite" :disabled="plan.isSaving" @update:model-value="onAccess" />
         </div>
-        <p v-if="formError" class="mt-3 text-sm text-clay" role="alert">{{ formError }}</p>
-        <div class="mt-4">
-          <AppButton type="submit" :disabled="plan.isSaving">Einladen</AppButton>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <form class="panel" @submit.prevent="invite">
+            <p class="label-meta">Option 1</p>
+            <h2 class="display-title mt-1 text-2xl">Per E-Mail</h2>
+            <p class="mt-2 text-sm leading-6 text-muted">
+              Hat die Person schon ein Konto, sieht sie den Plan beim nächsten Öffnen. Sonst bleibt die Einladung offen, bis sie sich registriert.
+            </p>
+            <div class="mt-4">
+              <TextField
+                id="share-email"
+                label="E-Mail der Person"
+                type="email"
+                autocomplete="email"
+                :model-value="email"
+                :disabled="plan.isSaving"
+                @update:model-value="onEmail"
+              />
+            </div>
+            <div class="mt-4">
+              <AppButton type="submit" :disabled="plan.isSaving">{{ inviteLabel }}</AppButton>
+            </div>
+          </form>
+
+          <form class="panel" @submit.prevent="createLink">
+            <p class="label-meta">Option 2</p>
+            <h2 class="display-title mt-1 text-2xl">Per Link</h2>
+            <p class="mt-2 text-sm leading-6 text-muted">
+              Link erzeugen, kopieren, weitergeben. Die erste angemeldete Person, die ihn öffnet, bekommt den Zugriff.
+            </p>
+            <div class="mt-4">
+              <AppButton type="submit" :disabled="plan.isSaving">{{ linkLabel }}</AppButton>
+            </div>
+          </form>
         </div>
-      </form>
+        <p v-if="formError" class="text-sm text-clay" role="alert">{{ formError }}</p>
+      </div>
 
       <PushOptIn />
 

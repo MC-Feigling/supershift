@@ -6,6 +6,13 @@ export const SHARE_STATUS = {
 
 export type ShareStatus = (typeof SHARE_STATUS)[keyof typeof SHARE_STATUS]
 
+export const SHARE_CHANNEL = {
+  email: 'email',
+  link: 'link',
+} as const
+
+export type ShareChannel = (typeof SHARE_CHANNEL)[keyof typeof SHARE_CHANNEL]
+
 export type PlanView = 'own' | 'shared'
 
 export interface SessionUser {
@@ -36,12 +43,22 @@ export interface PlanShare {
   id: string
   ownerId: string
   ownerEmail: string
-  granteeEmail: string
+  granteeEmail: string | null
   granteeId: string | null
   status: ShareStatus
   canWrite: boolean
+  inviteChannel: ShareChannel
+  inviteToken: string | null
   createdAt: string
   revokedAt: string | null
+}
+
+export interface InviteLookup {
+  ownerEmail: string
+  status: ShareStatus
+  isOwn: boolean
+  granteeIsSelf: boolean
+  canWrite: boolean
 }
 
 export interface PlacementDraft {

@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { ROUTES } from '~/utils/constants'
+import { ROUTES, WEITER_QUERY } from '~/utils/constants'
 import { toGermanError } from '~/utils/errors'
+import { readInviteRedirect, withInviteRedirect } from '~/utils/invite'
 
 definePageMeta({ layout: 'auth' })
 useHead({ title: 'Registrieren' })
 
+const route = useRoute()
 const session = useSession()
 const formError = ref('')
 const info = ref('')
 const pending = ref(false)
+const weiter = computed(() => readInviteRedirect(route.query[WEITER_QUERY]))
+const signInHref = computed(() => withInviteRedirect(ROUTES.signIn, weiter.value))
 
 async function onSubmit(payload: { email: string, password: string }): Promise<void> {
   formError.value = ''
@@ -37,7 +41,7 @@ async function onSubmit(payload: { email: string, password: string }): Promise<v
       :pending="pending"
       :form-error="formError"
       :info="info"
-      :alternate-href="ROUTES.signIn"
+      :alternate-href="signInHref"
       alternate-prompt="Schon ein Konto?"
       alternate-label="Anmelden"
       @submit="onSubmit"
