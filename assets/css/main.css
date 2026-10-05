@@ -46,3 +46,18 @@
     inset 0 1px 0 rgba(235, 230, 220, 0.06),
     0 18px 40px -28px rgba(0, 0, 0, 0.8);
 }
+
+.day-dialog {
+  margin: auto;
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(40rem, calc(100dvh - 2rem));
+  overflow: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.day-dialog::backdrop {
+  background: rgb(8 9 10 / 72%);
+}
