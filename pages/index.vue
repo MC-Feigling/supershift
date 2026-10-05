@@ -62,7 +62,7 @@ function onDialogClick(event: MouseEvent): void {
   if (event.target === editorRef.value) closeEditor()
 }
 
-watch(editorOpen, async (open) => {
+watch(editorOpen, async (open: boolean) => {
   if (!open) return
   await nextTick()
   const dialog = editorRef.value
