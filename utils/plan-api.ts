@@ -4,6 +4,7 @@ import type { Placement, PlacementDraft, PlanShare, ShiftType } from '~/types/pl
 import { SHARE_STATUS } from '~/types/plan'
 import { TABLES } from './constants'
 import { AppError } from './errors'
+import type { PushKeys } from './push'
 
 type Client = SupabaseClient<Database>
 
@@ -46,7 +47,7 @@ export async function deleteShiftType(client: Client, shiftTypeId: string): Prom
 export async function fetchPlacements(client: Client, ownerId: string): Promise<Placement[]> {
   const { data, error } = await client
     .from(TABLES.placements)
-    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, created_at')
+    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, note, created_at')
     .eq('owner_id', ownerId)
 
   if (error) throw error
@@ -57,7 +58,7 @@ export async function fetchPlacementsForOwners(client: Client, ownerIds: readonl
   if (ownerIds.length === 0) return []
   const { data, error } = await client
     .from(TABLES.placements)
-    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, created_at')
+    .select('id, owner_id, shift_type_id, starts_on, ends_on, repeats_weekly, note, created_at')
     .in('owner_id', [...ownerIds])
 
   if (error) throw error
@@ -71,6 +72,7 @@ export async function insertPlacement(client: Client, ownerId: string, draft: Pl
     starts_on: draft.startsOn,
     ends_on: draft.repeatsWeekly ? draft.endsOn : null,
     repeats_weekly: draft.repeatsWeekly,
+    note: draft.note,
   })
   if (error) throw error
 }
@@ -125,6 +127,31 @@ export async function revokeShare(client: Client, shareId: string): Promise<void
   if (error) throw error
 }
 
+export async function savePushSubscription(client: Client, userId: string, keys: PushKeys): Promise<void> {
+  const { error: deleteError } = await client
+    .from(TABLES.pushSubscriptions)
+    .delete()
+    .eq('user_id', userId)
+    .eq('endpoint', keys.endpoint)
+  if (deleteError) throw deleteError
+  const { error } = await client.from(TABLES.pushSubscriptions).insert({
+    user_id: userId,
+    endpoint: keys.endpoint,
+    p256dh: keys.p256dh,
+    auth: keys.auth,
+  })
+  if (error) throw error
+}
+
+export async function deletePushSubscription(client: Client, userId: string, endpoint: string): Promise<void> {
+  const { error } = await client
+    .from(TABLES.pushSubscriptions)
+    .delete()
+    .eq('user_id', userId)
+    .eq('endpoint', endpoint)
+  if (error) throw error
+}
+
 function mapShiftType(row: Database['public']['Tables']['shift_types']['Row']): ShiftType {
   return {
     id: row.id,
@@ -142,6 +169,7 @@ function mapPlacement(row: Database['public']['Tables']['placements']['Row']): P
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     repeatsWeekly: row.repeats_weekly,
+    note: row.note,
     createdAt: row.created_at,
   }
 }

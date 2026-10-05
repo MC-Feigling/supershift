@@ -48,6 +48,7 @@ export function entriesForDay(
       background: color.background,
       color: color.color,
       detail: placementDetail(placement),
+      note: placement.note,
       removeLabel: placement.repeatsWeekly ? 'Serie entfernen' : 'Eintrag entfernen',
     })
   }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DayEntry, PlacementDraft, ShiftOption } from '~/types/plan'
-import { ROUTES, SHIFT_NAME_MAX_LENGTH } from '~/utils/constants'
+import { NOTE_MAX_LENGTH, ROUTES, SHIFT_NAME_MAX_LENGTH } from '~/utils/constants'
 
 const props = defineProps<{
   iso: string
@@ -22,6 +22,7 @@ const emit = defineEmits<{
 const shiftTypeId = ref('')
 const repeatsWeekly = ref(false)
 const endsOn = ref('')
+const note = ref('')
 const localError = ref('')
 const pendingDeleteId = ref<string | null>(null)
 
@@ -31,6 +32,7 @@ const pendingEntry = computed(() => props.entries.find((entry) => entry.placemen
 const confirmTitle = computed(() => pendingEntry.value ? `${pendingEntry.value.name} entfernen?` : '')
 const shiftsLink = ROUTES.shifts
 const nameMax = SHIFT_NAME_MAX_LENGTH
+const noteMax = NOTE_MAX_LENGTH
 
 function onShiftChange(event: Event): void {
   const target = event.target
@@ -51,6 +53,11 @@ function onEndsOn(value: string): void {
   localError.value = ''
 }
 
+function onNote(value: string): void {
+  note.value = value
+  localError.value = ''
+}
+
 function submit(): void {
   localError.value = ''
   emit('create', {
@@ -58,6 +65,7 @@ function submit(): void {
     startsOn: props.iso,
     repeatsWeekly: repeatsWeekly.value,
     endsOn: repeatsWeekly.value ? endsOn.value : null,
+    note: note.value,
   })
 }
 
@@ -74,12 +82,16 @@ function confirmRemove(): void {
   emit('remove', pendingDeleteId.value)
   pendingDeleteId.value = null
 }
+
+watch(() => props.entries.map((entry) => entry.placementId), (ids: string[], previous: string[] | undefined) => {
+  if (!previous) return
+  if (ids.some((id) => !previous.includes(id))) note.value = ''
+})
 </script>
 
 <template>
   <aside class="panel">
-    <p class="label-meta">Ausgewählter Tag</p>
-    <h2 class="display-title mt-1 text-3xl leading-tight">{{ dayLabel }}</h2>
+    <h2 class="display-title text-3xl leading-tight">{{ dayLabel }}</h2>
 
     <p v-if="readOnly" class="mt-4 rounded-sm bg-spruce-soft px-3 py-2 text-sm text-spruce">
       Nur lesen. Diesen Plan hat jemand mit dir geteilt.
@@ -94,6 +106,7 @@ function confirmRemove(): void {
       >
         <p class="font-semibold">{{ entry.name }}</p>
         <p class="text-sm opacity-80">{{ entry.detail }}</p>
+        <p v-if="entry.note" class="mt-1 text-sm leading-5 opacity-90">{{ entry.note }}</p>
         <button
           v-if="!readOnly"
           type="button"
@@ -139,6 +152,14 @@ function confirmRemove(): void {
         type="date"
         :model-value="endsOn"
         @update:model-value="onEndsOn"
+      />
+      <TextArea
+        id="placement-note"
+        label="Notiz (optional)"
+        :model-value="note"
+        :maxlength="noteMax"
+        :disabled="saving"
+        @update:model-value="onNote"
       />
       <p v-if="visibleError" class="text-sm text-clay" role="alert">{{ visibleError }}</p>
       <AppButton type="submit" :disabled="saving" block>

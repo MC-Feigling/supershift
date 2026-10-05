@@ -27,6 +27,7 @@ export interface Database {
           starts_on: string
           ends_on: string | null
           repeats_weekly: boolean
+          note: string
           created_at: string
         }
         Insert: {
@@ -36,12 +37,14 @@ export interface Database {
           starts_on: string
           ends_on?: string | null
           repeats_weekly?: boolean
+          note?: string
           created_at?: string
         }
         Update: {
           starts_on?: string
           ends_on?: string | null
           repeats_weekly?: boolean
+          note?: string
         }
         Relationships: []
       }
@@ -69,6 +72,30 @@ export interface Database {
         Update: {
           status?: string
           revoked_at?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          created_at?: string
+        }
+        Update: {
+          endpoint?: string
+          p256dh?: string
+          auth?: string
         }
         Relationships: []
       }

@@ -1,4 +1,4 @@
-import { DAYS_PER_WEEK, MONTH_GRID_LENGTH, MS_PER_DAY, WEEKDAY_LABELS } from './constants'
+import { DAYS_PER_WEEK, MONTH_GRID_LENGTH, MS_PER_DAY } from './constants'
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/
 
@@ -64,12 +64,6 @@ export function dayDiff(laterIso: string, earlierIso: string): number {
   return Math.round((later.getTime() - earlier.getTime()) / MS_PER_DAY)
 }
 
-export function weekdayLabel(index: number): string {
-  const label = WEEKDAY_LABELS[index]
-  if (!label) throw new Error('weekday index out of range')
-  return label
-}
-
 export function formatMonth(anchor: Date): string {
   return monthFormatter.format(anchor)
 }
@@ -80,18 +74,6 @@ export function formatDay(iso: string): string {
 
 export function formatShortDay(iso: string): string {
   return shortFormatter.format(parseIsoDate(iso))
-}
-
-export function weekIsoDates(anchorIso: string): string[] {
-  const start = addDays(parseIsoDate(anchorIso), -mondayIndex(parseIsoDate(anchorIso)))
-  return Array.from({ length: DAYS_PER_WEEK }, (_, index) => toIsoDate(addDays(start, index)))
-}
-
-export function formatWeekSpan(isoDates: readonly string[]): string {
-  const first = isoDates[0]
-  const last = isoDates[isoDates.length - 1]
-  if (!first || !last) return ''
-  return `${formatShortDay(first)} – ${formatShortDay(last)}`
 }
 
 export interface MonthDay {

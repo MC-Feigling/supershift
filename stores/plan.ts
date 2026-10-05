@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import type { Placement, PlacementDraft, PlanShare, PlanView, SessionUser, ShiftType } from '~/types/plan'
 import { ROUTES, SESSION_STATE_KEY } from '~/utils/constants'
 import { AppError, isSessionExpired, toGermanError } from '~/utils/errors'
+import { queuePlanNotice } from '~/utils/plan-notice'
+import { PLAN_NOTICE_KIND } from '~/utils/push'
 import {
   deletePlacement,
   deleteShiftType,
@@ -20,6 +22,7 @@ import {
 } from '~/utils/plan-api'
 import {
   normalizeEmail,
+  normalizeNote,
   normalizeShiftName,
   placementsConflict,
   validatePlacement,
@@ -139,22 +142,49 @@ export const usePlanStore = defineStore('plan', () => {
 
   async function createPlacement(draft: PlacementDraft): Promise<void> {
     assertOwnPlan()
+    const cleaned: PlacementDraft = {
+      ...draft,
+      note: normalizeNote(draft.note),
+    }
     const knownIds = shiftTypes.value.map((shiftType: ShiftType) => shiftType.id)
-    const draftError = validatePlacement(draft, knownIds)
+    const draftError = validatePlacement(cleaned, knownIds)
     if (draftError) throw new AppError(draftError)
-    if (placementsConflict(placements.value, draft)) {
+    if (placementsConflict(placements.value, cleaned)) {
       throw new AppError('Diese Schicht liegt an einem dieser Tage schon.')
     }
     await mutate(async (client, user) => {
-      await insertPlacement(client, user.id, draft)
+      await insertPlacement(client, user.id, cleaned)
     })
+    const shiftName = shiftTypes.value.find((shiftType: ShiftType) => shiftType.id === cleaned.shiftTypeId)?.name
+    if (shiftName) {
+      queuePlanNotice({
+        kind: PLAN_NOTICE_KIND.created,
+        shiftName,
+        startsOn: cleaned.startsOn,
+        repeatsWeekly: cleaned.repeatsWeekly,
+        endsOn: cleaned.endsOn,
+      })
+    }
   }
 
   async function removePlacement(placementId: string): Promise<void> {
     assertOwnPlan()
+    const placement = placements.value.find((entry: Placement) => entry.id === placementId)
+    const shiftName = placement
+      ? shiftTypes.value.find((shiftType: ShiftType) => shiftType.id === placement.shiftTypeId)?.name
+      : undefined
     await mutate(async (client) => {
       await deletePlacement(client, placementId)
     })
+    if (placement && shiftName) {
+      queuePlanNotice({
+        kind: PLAN_NOTICE_KIND.removed,
+        shiftName,
+        startsOn: placement.startsOn,
+        repeatsWeekly: placement.repeatsWeekly,
+        endsOn: placement.endsOn,
+      })
+    }
   }
 
   async function invite(email: string): Promise<void> {

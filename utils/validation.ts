@@ -1,5 +1,5 @@
 import type { Placement, PlacementDraft } from '~/types/plan'
-import { EMAIL_MAX_LENGTH, MIN_PASSWORD_LENGTH, SERIES_MAX_DAYS, SHIFT_NAME_MAX_LENGTH } from './constants'
+import { EMAIL_MAX_LENGTH, MIN_PASSWORD_LENGTH, NOTE_MAX_LENGTH, SERIES_MAX_DAYS, SHIFT_NAME_MAX_LENGTH } from './constants'
 import { dayDiff, isIsoDate, parseIsoDate } from './dates'
 import { occursOn } from './occurrences'
 
@@ -16,6 +16,10 @@ export function normalizeEmail(value: string): string {
 }
 
 export function normalizeShiftName(value: string): string {
+  return value.trim()
+}
+
+export function normalizeNote(value: string): string {
   return value.trim()
 }
 
@@ -56,11 +60,20 @@ export function validateShiftName(name: string): string | null {
   return null
 }
 
+export function validateNote(note: string): string | null {
+  if (note.length > NOTE_MAX_LENGTH) {
+    return `Höchstens ${NOTE_MAX_LENGTH} Zeichen.`
+  }
+  return null
+}
+
 export function validatePlacement(draft: PlacementDraft, knownShiftIds: readonly string[]): string | null {
   if (!isUuid(draft.shiftTypeId) || !knownShiftIds.includes(draft.shiftTypeId)) {
     return 'Wähle eine Schicht.'
   }
   if (!isIsoDate(draft.startsOn)) return 'Das Datum ist ungültig.'
+  const noteError = validateNote(draft.note)
+  if (noteError) return noteError
   if (!draft.repeatsWeekly) return null
   if (!draft.endsOn || !isIsoDate(draft.endsOn)) return 'Wähle das Enddatum der Serie.'
   if (draft.endsOn < draft.startsOn) return 'Das Enddatum liegt vor dem Start.'
