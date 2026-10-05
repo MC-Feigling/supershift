@@ -2,16 +2,18 @@
 import type { ShiftType } from '~/types/plan'
 import { SHIFT_NAME_MAX_LENGTH } from '~/utils/constants'
 import { toGermanError } from '~/utils/errors'
-import { shiftColor } from '~/utils/shift-color'
+import { nextUnusedColorIndex, shiftColorFromIndex } from '~/utils/shift-color'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Schichten' })
 
 const plan = await useLoadedPlan()
 const name = ref('')
+const colorIndex = ref(0)
 const formError = ref('')
 const editingId = ref<string | null>(null)
 const editingName = ref('')
+const editingColorIndex = ref(0)
 const pendingDeleteId = ref<string | null>(null)
 
 const showInitialLoading = computed(() => plan.status === 'loading' && !plan.hasLoaded)
@@ -19,10 +21,11 @@ const showBlockingError = computed(() => plan.status === 'error' && !plan.hasLoa
 const blockingBody = computed(() => plan.errorMessage ?? '')
 const isEmpty = computed(() => plan.hasLoaded && plan.shiftTypes.length === 0)
 const rows = computed(() => plan.shiftTypes.map((shiftType: ShiftType) => {
-  const color = shiftColor(shiftType.name)
+  const color = shiftColorFromIndex(shiftType.colorIndex)
   return {
     id: shiftType.id,
     name: shiftType.name,
+    colorIndex: shiftType.colorIndex,
     color: color.color,
     isEditing: shiftType.id === editingId.value,
     isConfirming: shiftType.id === pendingDeleteId.value,
@@ -30,13 +33,22 @@ const rows = computed(() => plan.shiftTypes.map((shiftType: ShiftType) => {
 }))
 const submitLabel = computed(() => plan.isSaving ? 'Speichern…' : 'Anlegen')
 
+function unusedColor(): number {
+  return nextUnusedColorIndex(plan.shiftTypes.map((shiftType: ShiftType) => shiftType.colorIndex))
+}
+
 function onName(value: string): void {
   name.value = value
 }
 
-function startEdit(id: string, currentName: string): void {
+function onColor(value: number): void {
+  colorIndex.value = value
+}
+
+function startEdit(id: string, currentName: string, currentColor: number): void {
   editingId.value = id
   editingName.value = currentName
+  editingColorIndex.value = currentColor
   formError.value = ''
 }
 
@@ -49,11 +61,16 @@ function onEditName(value: string): void {
   editingName.value = value
 }
 
+function onEditColor(value: number): void {
+  editingColorIndex.value = value
+}
+
 async function createShift(): Promise<void> {
   formError.value = ''
   try {
-    await plan.createShift(name.value)
+    await plan.createShift(name.value, colorIndex.value)
     name.value = ''
+    colorIndex.value = unusedColor()
   } catch (error) {
     formError.value = toGermanError(error)
   }
@@ -63,7 +80,7 @@ async function saveEdit(): Promise<void> {
   if (!editingId.value) return
   formError.value = ''
   try {
-    await plan.renameShift(editingId.value, editingName.value)
+    await plan.saveShift(editingId.value, editingName.value, editingColorIndex.value)
     cancelEdit()
   } catch (error) {
     formError.value = toGermanError(error)
@@ -84,6 +101,7 @@ async function confirmDelete(): Promise<void> {
   try {
     await plan.removeShift(pendingDeleteId.value)
     pendingDeleteId.value = null
+    if (!editingId.value) colorIndex.value = unusedColor()
   } catch (error) {
     formError.value = toGermanError(error)
   }
@@ -92,13 +110,22 @@ async function confirmDelete(): Promise<void> {
 async function retry(): Promise<void> {
   await plan.load()
 }
+
+watch(
+  () => plan.shiftTypes.map((shiftType: ShiftType) => shiftType.colorIndex).join(','),
+  () => {
+    if (editingId.value) return
+    colorIndex.value = unusedColor()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <section class="mx-auto max-w-xl">
     <h1 class="display-title text-4xl">Schichten</h1>
     <p class="mt-2 text-base leading-7 text-muted">
-      Nur der Name zählt. Die Farbe bleibt am Namen, damit Tage im Kalender unterscheidbar sind.
+      Name und Farbe. Die Farbe bleibt an der Schicht, damit Tage im Kalender unterscheidbar sind.
     </p>
 
     <StatusNote v-if="showInitialLoading" class="mt-6" tone="info" title="Schichten werden geladen" body="Einen Moment." />
@@ -107,7 +134,7 @@ async function retry(): Promise<void> {
     </StatusNote>
 
     <div v-else class="mt-6 space-y-4">
-      <form class="panel" @submit.prevent="createShift">
+      <form class="panel space-y-4" @submit.prevent="createShift">
         <TextField
           id="new-shift"
           label="Neue Schicht"
@@ -116,8 +143,9 @@ async function retry(): Promise<void> {
           :disabled="plan.isSaving"
           @update:model-value="onName"
         />
-        <p v-if="formError" class="mt-3 text-sm text-clay" role="alert">{{ formError }}</p>
-        <div class="mt-4">
+        <ShiftColorPicker id="new-shift-color" :model-value="colorIndex" :disabled="plan.isSaving" @update:model-value="onColor" />
+        <p v-if="formError" class="text-sm text-clay" role="alert">{{ formError }}</p>
+        <div>
           <AppButton type="submit" :disabled="plan.isSaving">{{ submitLabel }}</AppButton>
         </div>
       </form>
@@ -138,6 +166,12 @@ async function retry(): Promise<void> {
               :maxlength="SHIFT_NAME_MAX_LENGTH"
               @update:model-value="onEditName"
             />
+            <ShiftColorPicker
+              :id="`edit-color-${row.id}`"
+              :model-value="editingColorIndex"
+              :disabled="plan.isSaving"
+              @update:model-value="onEditColor"
+            />
             <div class="flex gap-2">
               <AppButton :disabled="plan.isSaving" @click="saveEdit">Speichern</AppButton>
               <AppButton variant="ghost" @click="cancelEdit">Abbrechen</AppButton>
@@ -151,7 +185,7 @@ async function retry(): Promise<void> {
             </div>
           </div>
           <div v-else class="mt-3 flex gap-2">
-            <AppButton variant="secondary" @click="startEdit(row.id, row.name)">Umbenennen</AppButton>
+            <AppButton variant="secondary" @click="startEdit(row.id, row.name, row.colorIndex)">Bearbeiten</AppButton>
             <AppButton variant="danger" @click="askDelete(row.id)">Löschen</AppButton>
           </div>
         </li>

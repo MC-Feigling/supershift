@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { SHARE_STATUS } from '~/types/plan'
 import { toGermanError } from '~/utils/errors'
+import { shareAccessLabel } from '~/utils/share-access'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Teilen' })
 
 const plan = await useLoadedPlan()
 const email = ref('')
+const canWrite = ref(false)
 const formError = ref('')
 const confirmingRevoke = ref(false)
 
@@ -23,23 +25,47 @@ const shareTitle = computed(() => {
 const shareBody = computed(() => {
   const share = openShare.value
   if (!share) return ''
+  const access = shareAccessLabel(share.canWrite)
   if (share.status === SHARE_STATUS.pending) {
-    return `${share.granteeEmail} hat noch kein Konto. Sobald die Person sich mit dieser E-Mail registriert, kann sie den Plan lesen.`
+    return `${share.granteeEmail} hat noch kein Konto. Sobald die Person sich mit dieser E-Mail registriert, kann sie den Plan ${access}.`
   }
-  return `${share.granteeEmail} kann den Plan lesen, nichts ändern. Bei Eintrag oder Entfernen bekommt sie eine Push-Meldung, wenn sie das eingeschaltet hat.`
+  if (share.canWrite) {
+    return `${share.granteeEmail} kann den Plan ${access}. Bei Änderungen bekommt die andere Person eine Push-Meldung, wenn sie das eingeschaltet hat.`
+  }
+  return `${share.granteeEmail} kann den Plan ${access}, nichts ändern. Bei Eintrag oder Entfernen bekommt sie eine Push-Meldung, wenn sie das eingeschaltet hat.`
 })
 const hasIncoming = computed(() => plan.incomingShares.length > 0)
+const incomingRows = computed(() => plan.incomingShares.map((share) => ({
+  id: share.id,
+  ownerEmail: share.ownerEmail,
+  access: shareAccessLabel(share.canWrite),
+})))
 const revokeLabel = computed(() => plan.isSaving ? 'Wird zurückgezogen…' : 'Zugriff entziehen')
+const incomingHint = computed(() => {
+  const shares = plan.incomingShares
+  if (shares.length === 1 && shares[0]?.canWrite) {
+    return 'Im Kalender wechselst du auf den geteilten Plan. Dort kannst du eintragen und entfernen.'
+  }
+  if (shares.some((share) => share.canWrite)) {
+    return 'Im Kalender wechselst du auf den geteilten Plan. Schreiben gilt nur, wenn die Freigabe das erlaubt.'
+  }
+  return 'Im Kalender wechselst du auf den geteilten Plan. Dort kannst du nur lesen.'
+})
 
 function onEmail(value: string): void {
   email.value = value
 }
 
+function onAccess(value: boolean): void {
+  canWrite.value = value
+}
+
 async function invite(): Promise<void> {
   formError.value = ''
   try {
-    await plan.invite(email.value)
+    await plan.invite(email.value, canWrite.value)
     email.value = ''
+    canWrite.value = false
   } catch (error) {
     formError.value = toGermanError(error)
   }
@@ -72,7 +98,7 @@ async function retry(): Promise<void> {
   <section class="mx-auto max-w-xl">
     <h1 class="display-title text-4xl">Teilen</h1>
     <p class="mt-2 text-base leading-7 text-muted">
-      Eine Person kann deinen Plan lesen. Sie ändert nichts. Es gibt keine Gruppe und keine weitere Freigabe.
+      Eine Person. Du wählst, ob sie nur liest oder auch einträgt. Es gibt keine Gruppe und keine weitere Freigabe.
     </p>
 
     <StatusNote v-if="showInitialLoading" class="mt-6" tone="info" title="Freigabe wird geladen" body="Einen Moment." />
@@ -112,6 +138,9 @@ async function retry(): Promise<void> {
             @update:model-value="onEmail"
           />
         </div>
+        <div class="mt-4">
+          <ShareAccessField :model-value="canWrite" :disabled="plan.isSaving" @update:model-value="onAccess" />
+        </div>
         <p v-if="formError" class="mt-3 text-sm text-clay" role="alert">{{ formError }}</p>
         <div class="mt-4">
           <AppButton type="submit" :disabled="plan.isSaving">Einladen</AppButton>
@@ -123,11 +152,11 @@ async function retry(): Promise<void> {
       <article v-if="hasIncoming" class="panel">
         <h2 class="display-title text-2xl">Mit dir geteilt</h2>
         <ul class="mt-3 space-y-2">
-          <li v-for="share in plan.incomingShares" :key="share.id" class="text-sm text-muted">
-            {{ share.ownerEmail }}
+          <li v-for="row in incomingRows" :key="row.id" class="text-sm text-muted">
+            {{ row.ownerEmail }} · {{ row.access }}
           </li>
         </ul>
-        <p class="mt-3 text-sm text-muted">Im Kalender wechselst du auf den geteilten Plan. Dort kannst du nur lesen.</p>
+        <p class="mt-3 text-sm text-muted">{{ incomingHint }}</p>
       </article>
     </div>
   </section>

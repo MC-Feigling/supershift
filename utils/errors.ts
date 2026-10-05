@@ -31,6 +31,7 @@ function mapPostgrestError(error: PostgrestError): string {
   if (error.message.includes(DB_ERROR.selfShare)) return 'Du kannst den Plan nicht mit dir selbst teilen.'
   if (error.message.includes(DB_ERROR.onlyRevoke)) return 'Eine Freigabe kann nur zurückgezogen werden.'
   if (error.message.includes(DB_ERROR.shiftTypeMismatch)) return 'Die Schicht gehört nicht zu diesem Plan.'
+  if (error.message.includes(DB_ERROR.invalidColor)) return 'Wähle eine Farbe.'
   if (error.message.includes(DB_ERROR.seriesEnd)) return 'Das Enddatum der Serie ist ungültig.'
   if (error.message.includes(CONSTRAINTS.placementNote)) {
     return `Die Notiz ist zu lang. Höchstens ${NOTE_MAX_LENGTH} Zeichen.`

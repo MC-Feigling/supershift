@@ -20,6 +20,7 @@ import {
   revokeShare,
   updateShiftType,
 } from '~/utils/plan-api'
+import { isReadOnlyView } from '~/utils/share-access'
 import {
   normalizeEmail,
   normalizeNote,
@@ -27,6 +28,7 @@ import {
   placementsConflict,
   validatePlacement,
   validateShareEmail,
+  validateShiftColorIndex,
   validateShiftName,
 } from '~/utils/validation'
 
@@ -63,7 +65,7 @@ export const usePlanStore = defineStore('plan', () => {
     return sharedPlacements.value.filter((placement: Placement) => placement.ownerId === ownerId)
   })
 
-  const readOnly = computed(() => view.value === 'shared')
+  const readOnly = computed(() => isReadOnlyView(view.value, activeIncoming.value))
 
   async function load(): Promise<void> {
     const client = requireClient()
@@ -109,28 +111,32 @@ export const usePlanStore = defineStore('plan', () => {
     }
   }
 
-  async function createShift(name: string): Promise<void> {
+  async function createShift(name: string, colorIndex: number): Promise<void> {
     const cleaned = normalizeShiftName(name)
     const nameError = validateShiftName(cleaned)
     if (nameError) throw new AppError(nameError)
+    const colorError = validateShiftColorIndex(colorIndex)
+    if (colorError) throw new AppError(colorError)
     if (shiftTypes.value.some((shiftType: ShiftType) => shiftType.name.toLowerCase() === cleaned.toLowerCase())) {
       throw new AppError('Diesen Namen gibt es schon.')
     }
     await mutate(async (client, user) => {
-      await insertShiftType(client, user.id, cleaned)
+      await insertShiftType(client, user.id, cleaned, colorIndex)
     })
   }
 
-  async function renameShift(shiftTypeId: string, name: string): Promise<void> {
+  async function saveShift(shiftTypeId: string, name: string, colorIndex: number): Promise<void> {
     const cleaned = normalizeShiftName(name)
     const nameError = validateShiftName(cleaned)
     if (nameError) throw new AppError(nameError)
+    const colorError = validateShiftColorIndex(colorIndex)
+    if (colorError) throw new AppError(colorError)
     const duplicate = shiftTypes.value.some(
       (shiftType: ShiftType) => shiftType.id !== shiftTypeId && shiftType.name.toLowerCase() === cleaned.toLowerCase(),
     )
     if (duplicate) throw new AppError('Diesen Namen gibt es schon.')
     await mutate(async (client) => {
-      await updateShiftType(client, shiftTypeId, cleaned)
+      await updateShiftType(client, shiftTypeId, cleaned, colorIndex)
     })
   }
 
@@ -141,21 +147,22 @@ export const usePlanStore = defineStore('plan', () => {
   }
 
   async function createPlacement(draft: PlacementDraft): Promise<void> {
-    assertOwnPlan()
+    assertCanWrite()
+    const ownerId = writingOwnerId()
     const cleaned: PlacementDraft = {
       ...draft,
       note: normalizeNote(draft.note),
     }
-    const knownIds = shiftTypes.value.map((shiftType: ShiftType) => shiftType.id)
+    const knownIds = visibleShiftTypes.value.map((shiftType: ShiftType) => shiftType.id)
     const draftError = validatePlacement(cleaned, knownIds)
     if (draftError) throw new AppError(draftError)
-    if (placementsConflict(placements.value, cleaned)) {
+    if (placementsConflict(visiblePlacements.value, cleaned)) {
       throw new AppError('Diese Schicht liegt an einem dieser Tage schon.')
     }
-    await mutate(async (client, user) => {
-      await insertPlacement(client, user.id, cleaned)
+    await mutate(async (client) => {
+      await insertPlacement(client, ownerId, cleaned)
     })
-    const shiftName = shiftTypes.value.find((shiftType: ShiftType) => shiftType.id === cleaned.shiftTypeId)?.name
+    const shiftName = visibleShiftTypes.value.find((shiftType: ShiftType) => shiftType.id === cleaned.shiftTypeId)?.name
     if (shiftName) {
       queuePlanNotice({
         kind: PLAN_NOTICE_KIND.created,
@@ -163,15 +170,17 @@ export const usePlanStore = defineStore('plan', () => {
         startsOn: cleaned.startsOn,
         repeatsWeekly: cleaned.repeatsWeekly,
         endsOn: cleaned.endsOn,
+        planOwnerId: ownerId,
       })
     }
   }
 
   async function removePlacement(placementId: string): Promise<void> {
-    assertOwnPlan()
-    const placement = placements.value.find((entry: Placement) => entry.id === placementId)
+    assertCanWrite()
+    const ownerId = writingOwnerId()
+    const placement = visiblePlacements.value.find((entry: Placement) => entry.id === placementId)
     const shiftName = placement
-      ? shiftTypes.value.find((shiftType: ShiftType) => shiftType.id === placement.shiftTypeId)?.name
+      ? visibleShiftTypes.value.find((shiftType: ShiftType) => shiftType.id === placement.shiftTypeId)?.name
       : undefined
     await mutate(async (client) => {
       await deletePlacement(client, placementId)
@@ -183,18 +192,19 @@ export const usePlanStore = defineStore('plan', () => {
         startsOn: placement.startsOn,
         repeatsWeekly: placement.repeatsWeekly,
         endsOn: placement.endsOn,
+        planOwnerId: ownerId,
       })
     }
   }
 
-  async function invite(email: string): Promise<void> {
+  async function invite(email: string, canWrite: boolean): Promise<void> {
     const user = readUser()
     if (!user) throw new AppError('Nicht angemeldet.')
     const emailError = validateShareEmail(email, user.email)
     if (emailError) throw new AppError(emailError)
     if (outgoingShare.value) throw new AppError('Es gibt schon eine offene Freigabe. Zieh sie zuerst zurück.')
     await mutate(async (client, currentUser) => {
-      await insertShare(client, currentUser.id, normalizeEmail(email))
+      await insertShare(client, currentUser.id, normalizeEmail(email), canWrite)
     })
   }
 
@@ -258,8 +268,17 @@ export const usePlanStore = defineStore('plan', () => {
     errorMessage.value = null
   }
 
-  function assertOwnPlan(): void {
-    if (view.value === 'shared') throw new AppError('Diesen Plan kannst du nur lesen.')
+  function assertCanWrite(): void {
+    if (readOnly.value) throw new AppError('Diesen Plan kannst du nur lesen.')
+  }
+
+  function writingOwnerId(): string {
+    const user = readUser()
+    if (!user) throw new AppError('Nicht angemeldet.')
+    if (view.value === 'own') return user.id
+    const ownerId = activeIncoming.value?.ownerId
+    if (!ownerId) throw new AppError('Diesen Plan kannst du nur lesen.')
+    return ownerId
   }
 
   function requireClient() {
@@ -298,7 +317,7 @@ export const usePlanStore = defineStore('plan', () => {
     readOnly,
     load,
     createShift,
-    renameShift,
+    saveShift,
     removeShift,
     createPlacement,
     removePlacement,

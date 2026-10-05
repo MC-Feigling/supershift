@@ -11,7 +11,7 @@ type Client = SupabaseClient<Database>
 export async function fetchShiftTypes(client: Client, ownerId: string): Promise<ShiftType[]> {
   const { data, error } = await client
     .from(TABLES.shiftTypes)
-    .select('id, owner_id, name, created_at')
+    .select('id, owner_id, name, color_index, created_at')
     .eq('owner_id', ownerId)
 
   if (error) throw error
@@ -22,20 +22,20 @@ export async function fetchShiftTypesForOwners(client: Client, ownerIds: readonl
   if (ownerIds.length === 0) return []
   const { data, error } = await client
     .from(TABLES.shiftTypes)
-    .select('id, owner_id, name, created_at')
+    .select('id, owner_id, name, color_index, created_at')
     .in('owner_id', [...ownerIds])
 
   if (error) throw error
   return (data ?? []).map(mapShiftType).sort((left, right) => left.name.localeCompare(right.name, 'de'))
 }
 
-export async function insertShiftType(client: Client, ownerId: string, name: string): Promise<void> {
-  const { error } = await client.from(TABLES.shiftTypes).insert({ owner_id: ownerId, name })
+export async function insertShiftType(client: Client, ownerId: string, name: string, colorIndex: number): Promise<void> {
+  const { error } = await client.from(TABLES.shiftTypes).insert({ owner_id: ownerId, name, color_index: colorIndex })
   if (error) throw error
 }
 
-export async function updateShiftType(client: Client, shiftTypeId: string, name: string): Promise<void> {
-  const { error } = await client.from(TABLES.shiftTypes).update({ name }).eq('id', shiftTypeId)
+export async function updateShiftType(client: Client, shiftTypeId: string, name: string, colorIndex: number): Promise<void> {
+  const { error } = await client.from(TABLES.shiftTypes).update({ name, color_index: colorIndex }).eq('id', shiftTypeId)
   if (error) throw error
 }
 
@@ -85,7 +85,7 @@ export async function deletePlacement(client: Client, placementId: string): Prom
 export async function fetchOutgoingShare(client: Client, ownerId: string): Promise<PlanShare | null> {
   const { data, error } = await client
     .from(TABLES.planShares)
-    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, created_at, revoked_at')
+    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, can_write, created_at, revoked_at')
     .eq('owner_id', ownerId)
     .in('status', [SHARE_STATUS.pending, SHARE_STATUS.active])
     .maybeSingle()
@@ -98,7 +98,7 @@ export async function fetchOutgoingShare(client: Client, ownerId: string): Promi
 export async function fetchIncomingShares(client: Client, granteeId: string): Promise<PlanShare[]> {
   const { data, error } = await client
     .from(TABLES.planShares)
-    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, created_at, revoked_at')
+    .select('id, owner_id, owner_email, grantee_email, grantee_id, status, can_write, created_at, revoked_at')
     .eq('grantee_id', granteeId)
     .eq('status', SHARE_STATUS.active)
     .order('created_at', { ascending: false })
@@ -110,10 +110,11 @@ export async function fetchIncomingShares(client: Client, granteeId: string): Pr
   })
 }
 
-export async function insertShare(client: Client, ownerId: string, granteeEmail: string): Promise<void> {
+export async function insertShare(client: Client, ownerId: string, granteeEmail: string, canWrite: boolean): Promise<void> {
   const { error } = await client.from(TABLES.planShares).insert({
     owner_id: ownerId,
     grantee_email: granteeEmail,
+    can_write: canWrite,
   })
   if (error) throw error
 }
@@ -157,6 +158,7 @@ function mapShiftType(row: Database['public']['Tables']['shift_types']['Row']): 
     id: row.id,
     ownerId: row.owner_id,
     name: row.name,
+    colorIndex: row.color_index,
     createdAt: row.created_at,
   }
 }
@@ -183,6 +185,7 @@ function mapShare(row: Database['public']['Tables']['plan_shares']['Row']): Plan
     granteeEmail: row.grantee_email,
     granteeId: row.grantee_id,
     status: row.status,
+    canWrite: row.can_write,
     createdAt: row.created_at,
     revokedAt: row.revoked_at,
   }

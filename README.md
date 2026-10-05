@@ -35,4 +35,4 @@ Migration: `supabase/migrations`. Nach `supabase login` und Verknüpfung des Pro
 bunx supabase db push
 ```
 
-RLS: jede Person liest und schreibt nur eigene Zeilen. Wer eine aktive Freigabe hat, darf den Plan lesen. Die Person, die den Plan teilt, darf die Push-Endpunkte der lesenden Person für den Versand lesen.
+RLS: jede Person liest und schreibt nur eigene Zeilen. Wer eine aktive Freigabe hat, darf den Plan lesen. Mit Schreibrecht darf sie Einträge setzen und entfernen, nicht die Schichten. Die andere Person darf die Push-Endpunkte für den Versand lesen.

@@ -2,6 +2,7 @@ import webpush from 'web-push'
 import { SHARE_STATUS } from '~/types/plan'
 import { TABLES } from '~/utils/constants'
 import { noticeText, validatePlanNotice } from '~/utils/push'
+import { noticeRecipientId } from '~/utils/share-access'
 
 export default defineEventHandler(async (event) => {
   const { id, client } = await requireApiUser(event)
@@ -13,19 +14,25 @@ export default defineEventHandler(async (event) => {
 
   const { data: share, error: shareError } = await client
     .from(TABLES.planShares)
-    .select('grantee_id')
-    .eq('owner_id', id)
+    .select('owner_id, grantee_id, can_write')
+    .eq('owner_id', notice.planOwnerId)
     .eq('status', SHARE_STATUS.active)
     .maybeSingle()
 
   if (shareError) throw createError({ statusCode: 500, statusMessage: shareError.message })
-  const granteeId = share?.grantee_id
-  if (!granteeId) return { sent: 0 }
+  const recipientId = share
+    ? noticeRecipientId(id, {
+      ownerId: share.owner_id,
+      granteeId: share.grantee_id,
+      canWrite: share.can_write,
+    })
+    : null
+  if (!recipientId) return { sent: 0 }
 
   const { data: rows, error: subError } = await client
     .from(TABLES.pushSubscriptions)
     .select('endpoint, p256dh, auth')
-    .eq('user_id', granteeId)
+    .eq('user_id', recipientId)
 
   if (subError) throw createError({ statusCode: 500, statusMessage: subError.message })
   const subscriptions = rows ?? []

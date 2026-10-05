@@ -17,6 +17,7 @@ export interface ShiftType {
   id: string
   ownerId: string
   name: string
+  colorIndex: number
   createdAt: string
 }
 
@@ -38,6 +39,7 @@ export interface PlanShare {
   granteeEmail: string
   granteeId: string | null
   status: ShareStatus
+  canWrite: boolean
   createdAt: string
   revokedAt: string | null
 }
@@ -88,4 +90,5 @@ export interface DayEntry {
 export interface ShiftOption {
   id: string
   name: string
+  colorIndex: number
 }

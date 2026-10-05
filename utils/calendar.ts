@@ -2,7 +2,7 @@ import type { CalendarCell, DayChip, DayEntry, Placement, ShiftType } from '~/ty
 import { MAX_VISIBLE_DAY_CHIPS } from './constants'
 import { buildMonthDays, formatDay, formatShortDay } from './dates'
 import { occursOn } from './occurrences'
-import { shiftColor } from './shift-color'
+import { shiftColorFromIndex } from './shift-color'
 
 export function buildCalendarCells(
   anchor: Date,
@@ -35,17 +35,17 @@ export function entriesForDay(
   placements: readonly Placement[],
   shiftTypes: readonly ShiftType[],
 ): DayEntry[] {
-  const names = new Map(shiftTypes.map((shiftType) => [shiftType.id, shiftType.name]))
+  const types = new Map(shiftTypes.map((shiftType) => [shiftType.id, shiftType]))
   const entries: DayEntry[] = []
   for (const placement of placements) {
     if (!occursOn(placement, iso)) continue
-    const name = names.get(placement.shiftTypeId)
-    if (!name) continue
-    const color = shiftColor(name)
+    const shiftType = types.get(placement.shiftTypeId)
+    if (!shiftType) continue
+    const color = shiftColorFromIndex(shiftType.colorIndex)
     entries.push({
       placementId: placement.id,
       shiftTypeId: placement.shiftTypeId,
-      name,
+      name: shiftType.name,
       background: color.background,
       color: color.color,
       detail: placementDetail(placement),

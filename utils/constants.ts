@@ -47,6 +47,7 @@ export const DB_ERROR = {
   notOwner: 'not_owner',
   onlyRevoke: 'only_revoke',
   shiftTypeMismatch: 'shift_type_mismatch',
+  invalidColor: 'invalid_color',
   seriesEnd: 'series_end',
 } as const
 

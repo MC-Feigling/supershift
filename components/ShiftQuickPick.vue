@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ShiftOption } from '~/types/plan'
 import { SHIFT_QUICK_PICK_TITLE_ID } from '~/utils/constants'
-import { shiftColor } from '~/utils/shift-color'
+import { shiftColorFromIndex } from '~/utils/shift-color'
 
 interface QuickRow {
   id: string
@@ -28,7 +28,7 @@ const emit = defineEmits<{
 const titleId = SHIFT_QUICK_PICK_TITLE_ID
 
 const rows = computed<QuickRow[]>(() => props.shiftOptions.map((option: ShiftOption) => {
-  const color = shiftColor(option.name)
+  const color = shiftColorFromIndex(option.colorIndex)
   const taken = props.takenShiftTypeIds.includes(option.id)
   return {
     id: option.id,
