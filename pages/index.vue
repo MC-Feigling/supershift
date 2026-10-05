@@ -31,12 +31,14 @@ const showInitialLoading = computed(() => plan.status === 'loading' && !plan.has
 const showBlockingError = computed(() => plan.status === 'error' && !plan.hasLoaded)
 const blockingBody = computed(() => plan.errorMessage ?? '')
 const inlineError = computed(() => plan.hasLoaded ? plan.errorMessage ?? '' : '')
-const shiftOptions = computed<ShiftOption[]>(() => plan.shiftTypes.map((shiftType: ShiftType) => ({
+const shiftOptions = computed<ShiftOption[]>(() => plan.visibleShiftTypes.map((shiftType: ShiftType) => ({
   id: shiftType.id,
   name: shiftType.name,
+  colorIndex: shiftType.colorIndex,
 })))
-const showShiftLink = computed(() => !plan.readOnly && plan.shiftTypes.length === 0)
-const canQuickPick = computed(() => !plan.readOnly && plan.shiftTypes.length > 0)
+const catalogEmpty = computed(() => !plan.readOnly && plan.visibleShiftTypes.length === 0)
+const showShiftLink = computed(() => catalogEmpty.value && plan.view === 'own')
+const canQuickPick = computed(() => !plan.readOnly && plan.visibleShiftTypes.length > 0)
 const isSelectedEmpty = computed(() => selectedEntries.value.length === 0)
 const takenShiftTypeIds = computed(() => selectedEntries.value.map((entry: DayEntry) => entry.shiftTypeId))
 const showSharedSwitch = computed(() => plan.incomingShares.length > 0)
@@ -253,6 +255,7 @@ async function retry(): Promise<void> {
           :saving="plan.isSaving"
           :action-error="actionError"
           :show-shift-link="showShiftLink"
+          :catalog-empty="catalogEmpty"
           :is-empty="isSelectedEmpty"
           @create="onCreate"
           @remove="onRemove"

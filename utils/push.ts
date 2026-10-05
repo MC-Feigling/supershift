@@ -1,5 +1,5 @@
 import { formatShortDay, isIsoDate } from './dates'
-import { validateShiftName } from './validation'
+import { isUuid, validateShiftName } from './validation'
 
 export const PLAN_NOTICE_KIND = {
   created: 'created',
@@ -14,6 +14,7 @@ export interface PlanNotice {
   startsOn: string
   repeatsWeekly: boolean
   endsOn: string | null
+  planOwnerId: string
 }
 
 export interface PushKeys {
@@ -39,12 +40,14 @@ export function validatePlanNotice(value: unknown): PlanNotice | null {
   if (value.endsOn !== null && typeof value.endsOn !== 'string') return null
   if (value.repeatsWeekly && (typeof value.endsOn !== 'string' || !isIsoDate(value.endsOn))) return null
   if (validateShiftName(value.shiftName)) return null
+  if (typeof value.planOwnerId !== 'string' || !isUuid(value.planOwnerId)) return null
   return {
     kind: value.kind,
     shiftName: value.shiftName.trim(),
     startsOn: value.startsOn,
     repeatsWeekly: value.repeatsWeekly,
     endsOn: value.repeatsWeekly ? value.endsOn : null,
+    planOwnerId: value.planOwnerId,
   }
 }
 

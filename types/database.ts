@@ -6,16 +6,19 @@ export interface Database {
           id: string
           owner_id: string
           name: string
+          color_index: number
           created_at: string
         }
         Insert: {
           id?: string
           owner_id: string
           name: string
+          color_index: number
           created_at?: string
         }
         Update: {
           name?: string
+          color_index?: number
         }
         Relationships: []
       }
@@ -56,6 +59,7 @@ export interface Database {
           grantee_email: string
           grantee_id: string | null
           status: string
+          can_write: boolean
           created_at: string
           revoked_at: string | null
         }
@@ -66,6 +70,7 @@ export interface Database {
           grantee_email: string
           grantee_id?: string | null
           status?: string
+          can_write?: boolean
           created_at?: string
           revoked_at?: string | null
         }

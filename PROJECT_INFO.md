@@ -5,12 +5,12 @@ Persönlicher Schichtplan. Eine angemeldete Person führt ihn und kann ihn mit g
 ## Umfang
 
 - Anmeldung mit E-Mail und Passwort
-- Schichten nur als Name
+- Schichten als Name und Farbe aus der Palette
 - Monatskalender, Eintrag auf einen Tag, optionale Notiz, optionale wöchentliche Serie bis zu einem Datum
-- Push-Meldung an die Person mit Leserecht, wenn etwas eingetragen oder entfernt wird
-- Freigabe per E-Mail, nur lesen, Widerruf
+- Push-Meldung an die andere Person, wenn etwas eingetragen oder entfernt wird
+- Freigabe per E-Mail, Lesen oder Lesen/Schreiben, Widerruf
 - Oberfläche auf Deutsch
 
 ## Nicht im Umfang
 
-Zeiten, Orte, Rollen, Farbwähler, Teams, Organisationen, Druck.
+Zeiten, Orte, Rollen, freie Farbwerte, Teams, Organisationen, Druck.

@@ -1,5 +1,6 @@
 import type { Placement, PlacementDraft } from '~/types/plan'
 import { EMAIL_MAX_LENGTH, MIN_PASSWORD_LENGTH, NOTE_MAX_LENGTH, SERIES_MAX_DAYS, SHIFT_NAME_MAX_LENGTH } from './constants'
+import { isShiftColorIndex } from './shift-color'
 import { dayDiff, isIsoDate, parseIsoDate } from './dates'
 import { occursOn } from './occurrences'
 
@@ -57,6 +58,11 @@ export function validateShiftName(name: string): string | null {
   if (normalized.length > SHIFT_NAME_MAX_LENGTH) {
     return `Höchstens ${SHIFT_NAME_MAX_LENGTH} Zeichen.`
   }
+  return null
+}
+
+export function validateShiftColorIndex(index: number): string | null {
+  if (!isShiftColorIndex(index)) return 'Wähle eine Farbe.'
   return null
 }
 

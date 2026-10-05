@@ -11,6 +11,7 @@ const props = defineProps<{
   saving: boolean
   actionError: string
   showShiftLink: boolean
+  catalogEmpty: boolean
   isEmpty: boolean
 }>()
 
@@ -30,6 +31,10 @@ const visibleError = computed(() => localError.value || props.actionError)
 const showSeriesEnd = computed(() => repeatsWeekly.value)
 const pendingEntry = computed(() => props.entries.find((entry) => entry.placementId === pendingDeleteId.value) ?? null)
 const confirmTitle = computed(() => pendingEntry.value ? `${pendingEntry.value.name} entfernen?` : '')
+const emptyCatalogBody = computed(() => props.showShiftLink
+  ? 'Lege zuerst einen Namen an. Danach kannst du ihn auf Tage setzen.'
+  : 'Dieser Plan hat noch keine Schichten.')
+const showCreateForm = computed(() => !props.readOnly && !props.catalogEmpty)
 const shiftsLink = ROUTES.shifts
 const nameMax = SHIFT_NAME_MAX_LENGTH
 const noteMax = NOTE_MAX_LENGTH
@@ -134,7 +139,7 @@ watch(() => props.entries.map((entry) => entry.placementId), (ids: string[], pre
       </div>
     </div>
 
-    <form v-if="!readOnly && !showShiftLink" class="mt-6 space-y-4" @submit.prevent="submit">
+    <form v-if="showCreateForm" class="mt-6 space-y-4" @submit.prevent="submit">
       <label class="block" for="shift-choice">
         <span class="label-meta mb-1.5 block">Schicht</span>
         <select
@@ -171,12 +176,12 @@ watch(() => props.entries.map((entry) => entry.placementId), (ids: string[], pre
       <AppButton type="submit" :disabled="saving" block>
         {{ saving ? 'Eintragen…' : 'Eintragen' }}
       </AppButton>
-      <p class="text-xs text-muted">Namen sind höchstens {{ nameMax }} Zeichen lang. Die Farbe kommt vom Namen.</p>
+      <p class="text-xs text-muted">Namen sind höchstens {{ nameMax }} Zeichen lang. Die Farbe kommt von der Schicht.</p>
     </form>
 
-    <div v-if="showShiftLink" class="mt-6">
-      <StatusNote tone="empty" title="Noch keine Schichten" body="Lege zuerst einen Namen an. Danach kannst du ihn auf Tage setzen.">
-        <NuxtLink :to="shiftsLink" class="text-sm font-semibold text-spruce underline underline-offset-2">
+    <div v-if="catalogEmpty" class="mt-6">
+      <StatusNote tone="empty" title="Noch keine Schichten" :body="emptyCatalogBody">
+        <NuxtLink v-if="showShiftLink" :to="shiftsLink" class="text-sm font-semibold text-spruce underline underline-offset-2">
           Schichten anlegen
         </NuxtLink>
       </StatusNote>
