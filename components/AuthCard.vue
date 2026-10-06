@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { validateCredentials } from '~/utils/validation'
+import { passwordRequirements, validateCredentials } from '~/utils/validation'
+
+const PASSWORD_RULES_ID = 'password-rules'
 
 const props = defineProps<{
   title: string
@@ -12,6 +14,7 @@ const props = defineProps<{
   alternatePrompt: string
   alternateLabel: string
   passwordAutocomplete: string
+  strictPassword?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -23,6 +26,17 @@ const password = ref('')
 const emailError = ref('')
 const passwordError = ref('')
 const pendingLabel = computed(() => props.pending ? 'Bitte warten…' : props.submitLabel)
+const passwordDescribedBy = computed(() => props.strictPassword ? PASSWORD_RULES_ID : '')
+const passwordRules = computed(() => {
+  if (!props.strictPassword) return []
+  return passwordRequirements(password.value).map((rule) => ({
+    id: rule.id,
+    label: rule.label,
+    toneClass: rule.met ? 'text-spruce' : 'text-muted',
+    mark: rule.met ? '✓' : '○',
+    status: rule.met ? 'Erfüllt' : 'Fehlt',
+  }))
+})
 
 function onEmail(value: string): void {
   email.value = value
@@ -35,7 +49,7 @@ function onPassword(value: string): void {
 }
 
 function submit(): void {
-  const errors = validateCredentials(email.value, password.value)
+  const errors = validateCredentials(email.value, password.value, { strictPassword: props.strictPassword === true })
   emailError.value = errors.email ?? ''
   passwordError.value = errors.password ?? ''
   if (errors.email || errors.password) return
@@ -58,16 +72,36 @@ function submit(): void {
         :disabled="pending"
         @update:model-value="onEmail"
       />
-      <TextField
-        id="password"
-        label="Passwort"
-        type="password"
-        :autocomplete="passwordAutocomplete"
-        :model-value="password"
-        :error="passwordError"
-        :disabled="pending"
-        @update:model-value="onPassword"
-      />
+      <div>
+        <TextField
+          id="password"
+          label="Passwort"
+          type="password"
+          :autocomplete="passwordAutocomplete"
+          :model-value="password"
+          :error="passwordError"
+          :disabled="pending"
+          :described-by="passwordDescribedBy"
+          @update:model-value="onPassword"
+        />
+        <ul
+          v-if="strictPassword"
+          :id="PASSWORD_RULES_ID"
+          class="mt-2 space-y-1"
+          aria-label="Passwortregeln"
+        >
+          <li
+            v-for="rule in passwordRules"
+            :key="rule.id"
+            class="flex items-center gap-2 text-sm"
+            :class="rule.toneClass"
+          >
+            <span aria-hidden="true" class="w-3 text-center">{{ rule.mark }}</span>
+            <span class="sr-only">{{ rule.status }}: </span>
+            <span>{{ rule.label }}</span>
+          </li>
+        </ul>
+      </div>
       <p v-if="formError" class="text-sm text-clay" role="alert">{{ formError }}</p>
       <p v-if="info" class="text-sm text-spruce" role="status">{{ info }}</p>
       <AppButton type="submit" :disabled="pending" block>{{ pendingLabel }}</AppButton>

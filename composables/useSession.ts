@@ -28,7 +28,7 @@ export function useSession() {
   }
 
   async function signUp(email: string, password: string): Promise<AuthResult> {
-    const errors = validateCredentials(email, password)
+    const errors = validateCredentials(email, password, { strictPassword: true })
     if (errors.email || errors.password) throw new AppError(errors.email ?? errors.password ?? 'Eingabe prüfen.')
     const supabase = requireSupabase()
     const next = readInviteRedirect(route.query[WEITER_QUERY])
