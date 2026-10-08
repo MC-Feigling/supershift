@@ -38,6 +38,7 @@ async function onSubmit(payload: { email: string, password: string }): Promise<v
       lead="Dein Plan gehört dir. Du kannst ihn später mit einer Person teilen."
       submit-label="Konto erstellen"
       password-autocomplete="new-password"
+      strict-password
       :pending="pending"
       :form-error="formError"
       :info="info"

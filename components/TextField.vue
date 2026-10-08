@@ -8,12 +8,14 @@ const props = withDefaults(defineProps<{
   autocomplete?: string
   maxlength?: number
   disabled?: boolean
+  describedBy?: string
 }>(), {
   type: 'text',
   error: '',
   autocomplete: undefined,
   maxlength: undefined,
   disabled: false,
+  describedBy: '',
 })
 
 const emit = defineEmits<{
@@ -21,6 +23,10 @@ const emit = defineEmits<{
 }>()
 
 const errorId = computed(() => props.error ? `${props.id}-error` : undefined)
+const describedBy = computed(() => {
+  const ids = [props.describedBy, errorId.value].filter((id): id is string => Boolean(id))
+  return ids.length > 0 ? ids.join(' ') : undefined
+})
 const invalid = computed(() => props.error.length > 0)
 
 function onInput(event: Event): void {
@@ -41,7 +47,7 @@ function onInput(event: Event): void {
       :maxlength="maxlength"
       :disabled="disabled"
       :aria-invalid="invalid"
-      :aria-describedby="errorId"
+      :aria-describedby="describedBy"
       class="w-full rounded-sm border border-line bg-paper px-3.5 py-3 text-base text-ink outline-none ring-spruce placeholder:text-muted focus:border-spruce focus:ring-2 disabled:opacity-60"
       @input="onInput"
     >
