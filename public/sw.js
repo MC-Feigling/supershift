@@ -6,6 +6,14 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim())
 })
 
+const PLAN_CHANGED = 'plan-changed'
+
+function notifyOpenClients() {
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+    windows.forEach((client) => client.postMessage({ type: PLAN_CHANGED }))
+  })
+}
+
 self.addEventListener('push', (event) => {
   const fallback = { title: 'Schichtwerk', body: 'Der Plan hat sich geändert.', url: '/' }
   let payload = fallback
@@ -14,12 +22,13 @@ self.addEventListener('push', (event) => {
   } catch {
     payload = fallback
   }
-  event.waitUntil(
+  event.waitUntil(Promise.all([
     self.registration.showNotification(payload.title, {
       body: payload.body,
       data: { url: payload.url || '/' },
     }),
-  )
+    notifyOpenClients(),
+  ]))
 })
 
 self.addEventListener('notificationclick', (event) => {

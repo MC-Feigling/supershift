@@ -18,3 +18,9 @@ export function noticeRecipientId(
 export function shareAccessLabel(canWrite: boolean): string {
   return canWrite ? 'lesen und schreiben' : 'nur lesen'
 }
+
+export function preferredSharedOwnerId(outgoing: PlanShare | null, incoming: readonly PlanShare[]): string | null {
+  if (outgoing) return null
+  const writable = incoming.find((share) => share.canWrite)
+  return (writable ?? incoming[0])?.ownerId ?? null
+}

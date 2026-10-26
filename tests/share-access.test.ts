@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { SHARE_CHANNEL, SHARE_STATUS, type PlanShare } from '~/types/plan'
-import { isReadOnlyView, noticeRecipientId } from '~/utils/share-access'
+import { isReadOnlyView, noticeRecipientId, preferredSharedOwnerId } from '~/utils/share-access'
 
 function share(overrides: Partial<PlanShare> = {}): PlanShare {
   return {
@@ -44,5 +44,23 @@ describe('noticeRecipientId', () => {
 
   it('notifies nobody when a reader spoofs a write notice', () => {
     expect(noticeRecipientId('grantee-id', share({ canWrite: false }))).toBeNull()
+  })
+})
+
+describe('preferredSharedOwnerId', () => {
+  it('keeps the owner on their own plan', () => {
+    expect(preferredSharedOwnerId(share(), [share({ ownerId: 'other' })])).toBeNull()
+  })
+
+  it('opens the writable shared plan for a partner without an own share', () => {
+    const incoming = [
+      share({ ownerId: 'read-owner', canWrite: false }),
+      share({ ownerId: 'write-owner', canWrite: true }),
+    ]
+    expect(preferredSharedOwnerId(null, incoming)).toBe('write-owner')
+  })
+
+  it('opens a read-only shared plan when that is the only access', () => {
+    expect(preferredSharedOwnerId(null, [share({ ownerId: 'read-owner', canWrite: false })])).toBe('read-owner')
   })
 })

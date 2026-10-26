@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DayEntry, PlacementDraft, ShiftOption, ShiftType } from '~/types/plan'
+import { SHARE_STATUS, type DayEntry, type PlacementDraft, type ShiftOption, type ShiftType } from '~/types/plan'
 import { DAY_PANEL_TITLE_ID, SHIFT_QUICK_PICK_TITLE_ID } from '~/utils/constants'
 import { toGermanError } from '~/utils/errors'
 
@@ -49,7 +49,30 @@ const ownVariant = computed(() => ownPressed.value ? 'primary' : 'secondary')
 const sharedVariant = computed(() => sharedPressed.value ? 'primary' : 'secondary')
 const showIncomingPicker = computed(() => plan.view === 'shared' && plan.incomingShares.length > 1)
 const selectedOwnerValue = computed(() => plan.selectedIncomingOwnerId ?? '')
-const showPushHint = computed(() => plan.incomingShares.length > 0 && pushStatus.value === 'off')
+const writableIncoming = computed(() => plan.incomingShares.find((share) => share.canWrite) ?? null)
+const planContext = computed(() => {
+  if (plan.view === 'shared' && plan.activeIncoming && !plan.readOnly) {
+    return {
+      title: `Plan von ${plan.activeIncoming.ownerEmail}`,
+      body: 'Einträge und Entfernen sieht die andere Person. Sie bekommt eine Meldung, wenn Benachrichtigungen an sind.',
+    }
+  }
+  if (plan.view === 'own' && writableIncoming.value) {
+    return {
+      title: 'Eigener Plan',
+      body: `Das sieht ${writableIncoming.value.ownerEmail} nicht. Oben auf den geteilten Plan wechseln.`,
+    }
+  }
+  return null
+})
+const showPlanContext = computed(() => planContext.value !== null)
+const planContextTitle = computed(() => planContext.value?.title ?? '')
+const planContextBody = computed(() => planContext.value?.body ?? '')
+const showPushHint = computed(() => {
+  if (pushStatus.value !== 'off') return false
+  if (plan.incomingShares.length > 0) return true
+  return plan.outgoingShare?.status === SHARE_STATUS.active
+})
 
 function selectDay(iso: string): void {
   actionError.value = ''
@@ -180,6 +203,14 @@ async function retry(): Promise<void> {
         </select>
       </label>
     </div>
+
+    <StatusNote
+      v-if="showPlanContext"
+      class="mb-5"
+      tone="info"
+      :title="planContextTitle"
+      :body="planContextBody"
+    />
 
     <StatusNote
       v-if="showPushHint"

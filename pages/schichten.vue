@@ -32,6 +32,13 @@ const rows = computed(() => plan.shiftTypes.map((shiftType: ShiftType) => {
   }
 }))
 const submitLabel = computed(() => plan.isSaving ? 'Speichern…' : 'Anlegen')
+const sharedWrite = computed(() => plan.incomingShares.find((share) => share.canWrite) ?? null)
+const showCollaboratorNote = computed(() => sharedWrite.value !== null)
+const collaboratorBody = computed(() => {
+  const share = sharedWrite.value
+  if (!share) return ''
+  return `Schichten im Plan von ${share.ownerEmail} legt die andere Person an. Einträge machst du im Kalender auf diesem Plan.`
+})
 
 function unusedColor(): number {
   return nextUnusedColorIndex(plan.shiftTypes.map((shiftType: ShiftType) => shiftType.colorIndex))
@@ -134,6 +141,12 @@ watch(
     </StatusNote>
 
     <div v-else class="mt-6 space-y-4">
+      <StatusNote
+        v-if="showCollaboratorNote"
+        tone="info"
+        title="Gemeinsamer Plan"
+        :body="collaboratorBody"
+      />
       <form class="panel space-y-4" @submit.prevent="createShift">
         <TextField
           id="new-shift"

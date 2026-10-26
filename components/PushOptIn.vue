@@ -22,7 +22,7 @@ const body = computed(() => {
   if (status.value === 'unconfigured') {
     return 'VAPID-Schlüssel fehlen in der Umgebung. Ohne sie gibt es keine Meldungen.'
   }
-  return 'Die Person mit Leserecht bekommt eine Meldung, sobald du etwas einträgst oder entfernst. Dafür muss sie das hier auf ihrem Gerät einschalten.'
+  return 'Die andere Person bekommt eine Meldung, sobald etwas eingetragen oder entfernt wird. Dafür muss sie das auf ihrem Gerät einschalten.'
 })
 
 const actionLabel = computed(() => {

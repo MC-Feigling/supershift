@@ -28,6 +28,8 @@ export const COPY_FEEDBACK_MS = 2000
 
 export const SESSION_STATE_KEY = 'session-user'
 export const SERVICE_WORKER_PATH = '/sw.js'
+export const PLAN_SYNC_MESSAGE = 'plan-changed'
+export const PLAN_SYNC_DEBOUNCE_MS = 400
 export const DAY_PANEL_TITLE_ID = 'day-panel-title'
 export const SHIFT_QUICK_PICK_TITLE_ID = 'shift-quick-pick-title'
 export const LONG_PRESS_MS = 500

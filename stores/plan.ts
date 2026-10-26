@@ -1,7 +1,9 @@
+import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import type { Database } from '~/types/database'
 import type { InviteLookup, Placement, PlacementDraft, PlanShare, PlanView, SessionUser, ShiftType } from '~/types/plan'
-import { ROUTES, SESSION_STATE_KEY } from '~/utils/constants'
+import { PLAN_SYNC_DEBOUNCE_MS, ROUTES, SESSION_STATE_KEY, TABLES } from '~/utils/constants'
 import { AppError, isSessionExpired, toGermanError } from '~/utils/errors'
 import { queuePlanNotice } from '~/utils/plan-notice'
 import { PLAN_NOTICE_KIND } from '~/utils/push'
@@ -24,8 +26,9 @@ import {
   updateShiftType,
 } from '~/utils/plan-api'
 import { isInviteToken, normalizeInviteToken } from '~/utils/invite'
-import { isReadOnlyView } from '~/utils/share-access'
+import { isReadOnlyView, preferredSharedOwnerId } from '~/utils/share-access'
 import {
+  isUuid,
   normalizeEmail,
   normalizeNote,
   normalizeShiftName,
@@ -35,6 +38,17 @@ import {
   validateShiftColorIndex,
   validateShiftName,
 } from '~/utils/validation'
+
+type Client = SupabaseClient<Database>
+
+interface PlanSnapshot {
+  ownTypes: ShiftType[]
+  ownPlacements: Placement[]
+  outgoing: PlanShare | null
+  incoming: PlanShare[]
+  otherTypes: ShiftType[]
+  otherPlacements: Placement[]
+}
 
 export const usePlanStore = defineStore('plan', () => {
   const shiftTypes = ref<ShiftType[]>([])
@@ -49,6 +63,11 @@ export const usePlanStore = defineStore('plan', () => {
   const errorMessage = ref<string | null>(null)
   const hasLoaded = ref(false)
   const isSaving = ref(false)
+  const viewChosen = ref(false)
+  let loadGeneration = 0
+  let syncChannel: RealtimeChannel | null = null
+  let syncKey = ''
+  let reloadTimer: ReturnType<typeof setTimeout> | null = null
 
   const activeIncoming = computed(() => {
     const selected = incomingShares.value.find((share: PlanShare) => share.ownerId === selectedIncomingOwnerId.value)
@@ -80,39 +99,28 @@ export const usePlanStore = defineStore('plan', () => {
       return
     }
 
+    const generation = beginLoad()
     if (!hasLoaded.value) status.value = 'loading'
     errorMessage.value = null
 
     try {
-      const [ownTypes, ownPlacements, outgoing, incoming] = await Promise.all([
-        fetchShiftTypes(client, user.id),
-        fetchPlacements(client, user.id),
-        fetchOutgoingShare(client, user.id),
-        fetchIncomingShares(client, user.id),
-      ])
-      const ownerIds = incoming.map((share) => share.ownerId)
-      const [otherTypes, otherPlacements] = await Promise.all([
-        fetchShiftTypesForOwners(client, ownerIds),
-        fetchPlacementsForOwners(client, ownerIds),
-      ])
-
-      shiftTypes.value = ownTypes
-      placements.value = ownPlacements
-      outgoingShare.value = outgoing
-      incomingShares.value = incoming
-      sharedShiftTypes.value = otherTypes
-      sharedPlacements.value = otherPlacements
-      if (!incoming.some((share) => share.ownerId === selectedIncomingOwnerId.value)) {
-        selectedIncomingOwnerId.value = incoming[0]?.ownerId ?? null
-      }
-      if (view.value === 'shared' && incoming.length === 0) view.value = 'own'
+      const snapshot = await fetchSnapshot(client, user.id)
+      if (generation !== loadGeneration) return
+      applySnapshot(snapshot)
+      bindPlanSync(client, user)
       hasLoaded.value = true
       status.value = 'ready'
     } catch (error) {
+      if (generation !== loadGeneration) return
       await handleExpired(error)
       status.value = 'error'
       errorMessage.value = toGermanError(error)
     }
+  }
+
+  function noteRemoteChange(): void {
+    if (!hasLoaded.value) return
+    scheduleExternalReload()
   }
 
   async function createShift(name: string, colorIndex: number): Promise<void> {
@@ -247,16 +255,18 @@ export const usePlanStore = defineStore('plan', () => {
   }
 
   function showOwnPlan(): void {
+    viewChosen.value = true
     view.value = 'own'
   }
 
   function showSharedPlan(ownerId?: string): void {
     if (incomingShares.value.length === 0) return
+    viewChosen.value = true
     if (ownerId) selectedIncomingOwnerId.value = ownerId
     view.value = 'shared'
   }
 
-  async function mutate(work: (client: NonNullable<ReturnType<typeof useNuxtApp>['$supabase']>, user: SessionUser) => Promise<void>): Promise<void> {
+  async function mutate(work: (client: Client, user: SessionUser) => Promise<void>): Promise<void> {
     const client = requireClient()
     const user = readUser()
     if (!user) throw new AppError('Nicht angemeldet.')
@@ -272,30 +282,90 @@ export const usePlanStore = defineStore('plan', () => {
     }
   }
 
-  async function reloadAfterWrite(
-    client: NonNullable<ReturnType<typeof useNuxtApp>['$supabase']>,
-    user: SessionUser,
-  ): Promise<void> {
+  async function reloadAfterWrite(client: Client, user: SessionUser): Promise<void> {
+    const generation = beginLoad()
+    const snapshot = await fetchSnapshot(client, user.id)
+    if (generation !== loadGeneration) return
+    applySnapshot(snapshot)
+    bindPlanSync(client, user)
+    hasLoaded.value = true
+    status.value = 'ready'
+    errorMessage.value = null
+  }
+
+  function beginLoad(): number {
+    loadGeneration += 1
+    return loadGeneration
+  }
+
+  async function fetchSnapshot(client: Client, userId: string): Promise<PlanSnapshot> {
     const [ownTypes, ownPlacements, outgoing, incoming] = await Promise.all([
-      fetchShiftTypes(client, user.id),
-      fetchPlacements(client, user.id),
-      fetchOutgoingShare(client, user.id),
-      fetchIncomingShares(client, user.id),
+      fetchShiftTypes(client, userId),
+      fetchPlacements(client, userId),
+      fetchOutgoingShare(client, userId),
+      fetchIncomingShares(client, userId),
     ])
     const ownerIds = incoming.map((share) => share.ownerId)
     const [otherTypes, otherPlacements] = await Promise.all([
       fetchShiftTypesForOwners(client, ownerIds),
       fetchPlacementsForOwners(client, ownerIds),
     ])
-    shiftTypes.value = ownTypes
-    placements.value = ownPlacements
-    outgoingShare.value = outgoing
-    incomingShares.value = incoming
-    sharedShiftTypes.value = otherTypes
-    sharedPlacements.value = otherPlacements
-    hasLoaded.value = true
-    status.value = 'ready'
-    errorMessage.value = null
+    return { ownTypes, ownPlacements, outgoing, incoming, otherTypes, otherPlacements }
+  }
+
+  function applySnapshot(snapshot: PlanSnapshot): void {
+    shiftTypes.value = snapshot.ownTypes
+    placements.value = snapshot.ownPlacements
+    outgoingShare.value = snapshot.outgoing
+    incomingShares.value = snapshot.incoming
+    sharedShiftTypes.value = snapshot.otherTypes
+    sharedPlacements.value = snapshot.otherPlacements
+    if (!snapshot.incoming.some((share) => share.ownerId === selectedIncomingOwnerId.value)) {
+      selectedIncomingOwnerId.value = snapshot.incoming[0]?.ownerId ?? null
+    }
+    if (view.value === 'shared' && snapshot.incoming.length === 0) view.value = 'own'
+    if (viewChosen.value) return
+    const sharedOwnerId = preferredSharedOwnerId(snapshot.outgoing, snapshot.incoming)
+    if (!sharedOwnerId) {
+      view.value = 'own'
+      return
+    }
+    selectedIncomingOwnerId.value = sharedOwnerId
+    view.value = 'shared'
+  }
+
+  function scheduleExternalReload(): void {
+    if (reloadTimer) clearTimeout(reloadTimer)
+    reloadTimer = setTimeout(() => {
+      reloadTimer = null
+      if (isSaving.value) {
+        scheduleExternalReload()
+        return
+      }
+      void load()
+    }, PLAN_SYNC_DEBOUNCE_MS)
+  }
+
+  function bindPlanSync(client: Client, user: SessionUser): void {
+    if (!import.meta.client) return
+    const ownerIds = [...new Set([user.id, ...incomingShares.value.map((share) => share.ownerId)])]
+      .filter((ownerId) => isUuid(ownerId))
+      .sort()
+    const key = ownerIds.join(',')
+    if (syncChannel && syncKey === key) return
+    if (syncChannel) void client.removeChannel(syncChannel)
+    syncKey = key
+    const channel = client.channel(`plan-sync:${user.id}`)
+    for (const ownerId of ownerIds) {
+      const filter = `owner_id=eq.${ownerId}`
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: TABLES.placements, filter }, () => {
+        scheduleExternalReload()
+      })
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: TABLES.shiftTypes, filter }, () => {
+        scheduleExternalReload()
+      })
+    }
+    syncChannel = channel.subscribe()
   }
 
   function assertCanWrite(): void {
@@ -311,7 +381,7 @@ export const usePlanStore = defineStore('plan', () => {
     return ownerId
   }
 
-  function requireClient() {
+  function requireClient(): Client {
     const client = useNuxtApp().$supabase
     if (!client) throw new AppError('Supabase ist nicht eingerichtet.')
     return client
@@ -346,6 +416,7 @@ export const usePlanStore = defineStore('plan', () => {
     visiblePlacements,
     readOnly,
     load,
+    noteRemoteChange,
     createShift,
     saveShift,
     removeShift,
